@@ -1,0 +1,27 @@
+version: '3.3'
+
+services:
+  db:
+    image: mysql:5.7
+    volumes:
+      - db_data:/var/lib/mysql
+    {{> partial.yml}}
+
+      MYSQL_ROOT_PASSWORD: somewordpress
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: {{ wordpressuser }}
+      MYSQL_PASSWORD: {{ wordpresspassword }}
+
+  wordpress:
+    depends_on:
+      - db
+    image: wordpress:latest
+    ports:
+      - "8000:80"
+    {{> partial.yml}}
+
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_USER: {{ wordpressuser }}
+      WORDPRESS_DB_PASSWORD: {{ wordpresspassword }}
+volumes:
+  db_data: {}

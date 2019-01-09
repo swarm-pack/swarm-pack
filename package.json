@@ -1,0 +1,29 @@
+{
+  "name": "swarm-pack",
+  "version": "1.0.0",
+  "description": "Package management for Docker Swarm",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "align-yaml": "^0.1.8",
+    "command-line-args": "^5.0.2",
+    "docker-service-api": "^17.12.19",
+    "js-yaml": "^3.12.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vudknguyen/swarm-pack.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/vudknguyen/swarm-pack/issues"
+  },
+  "homepage": "https://github.com/vudknguyen/swarm-pack#readme"
+}
