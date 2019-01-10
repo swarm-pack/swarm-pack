@@ -1,4 +1,7 @@
 #!/bin/bash
+source ./lib/yaml
+source ./lib/mo
+source ./secrets
 
 stack_name=
 
@@ -11,12 +14,8 @@ while [ "$1" != "" ]; do
     shift
 done
 
-source ./lib/yaml
-source ./lib/mo
-
 current_path=$(pwd)
 
-# echo 
 cd ../pack
 
 create_variables packfile.yml
@@ -30,8 +29,26 @@ $current_path/lib/normalizeYml -f docker-compose-tmp.yml > docker-compose.yml
 
 rm docker-compose-tmp.yml
 
+create_variables docker-compose.yml
+
+src_array_temp=()
+
+for i in `compgen -A variable | grep services_`
+do
+  service=$(echo $i | cut -d'_' -f 2)
+  src_array_temp=("${src_array_temp[@]}" "$service" )
+done
+
+svc_array=($(printf "%s\n" "${src_array_temp[@]}" | sort -u))
+
+for i in "${svc_array[@]}"
+do
+  docker service rm "${stack_name}_${i}" >&-
+done
+
 echo "Swarmpack: Deploying $pack_name $pack_version"
-docker-compose push
+
+create_secrets
 
 docker stack deploy --compose-file docker-compose.yml $stack_name
 

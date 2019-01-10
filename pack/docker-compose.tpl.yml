@@ -23,5 +23,12 @@ services:
       WORDPRESS_DB_HOST: db:3306
       WORDPRESS_DB_USER: {{ wordpressuser }}
       WORDPRESS_DB_PASSWORD: {{ wordpresspassword }}
+    secrets:
+      - my_secret_data_2
+
 volumes:
   db_data: {}
+
+secrets:
+  my_secret_data_2:
+    external: true
