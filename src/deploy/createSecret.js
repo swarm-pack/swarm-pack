@@ -1,8 +1,9 @@
 const { Readable } = require("stream");
 const { pipeableSpawn } = require("../utils");
 
-function createSecret({ name, value }) {
+function createSecret(secret, manifests) {
   return new Promise(function(resolve, reject) {
+    const { name, value } = secret;
     let rejected = false;
     const rejectOnce = (...args) => {
       if (!rejected) {
@@ -40,7 +41,7 @@ function createSecret({ name, value }) {
     pipeableSpawn(
       s,
       "docker",
-      ["secret", "create", name, "-"],
+      ["secret", "create", "--label", `pack.manifest.name=${manifests.name}`,name, "-"],
       onExit,
       onError,
       onStdout,

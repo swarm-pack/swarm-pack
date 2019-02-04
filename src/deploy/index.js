@@ -3,10 +3,10 @@ const deployToStack = require("./deployToStack");
 const cleanSecret = require("./cleanSecret");
 const cleanOutdatedService = require("./cleanOutdatedService");
 
-async function deploy({ secrets, compose, manifests }) {
-  await Promise.all(secrets.map(createSecret));
+async function deploy({ secrets, compose, manifests, stack }) {
+  await Promise.all(secrets.map(s => createSecret(s, manifests)));
 
-  const deployedService = await deployToStack({ compose });
+  const deployedService = await deployToStack({ compose, stack });
 
   await cleanOutdatedService({ deployedService, manifests });
   await cleanSecret({ secrets, manifests });

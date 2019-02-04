@@ -3,7 +3,7 @@ const { Readable } = require("stream");
 const _ = require("lodash");
 const { pipeableSpawn } = require("../utils");
 
-function deployToStack({ compose }) {
+function deployToStack({ compose, stack }) {
   console.log("Start deploying");
 
   return new Promise(function(resolve, reject) {
@@ -78,7 +78,7 @@ function deployToStack({ compose }) {
     pipeableSpawn(
       s,
       "docker",
-      ["stack", "deploy", "--compose-file", "-", "test"],
+      ["stack", "deploy", "--compose-file", "-", stack],
       onExit,
       onError,
       onStdout,

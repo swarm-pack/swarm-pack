@@ -9,7 +9,7 @@ function pipeableSpawn(
   onStdout,
   onStderr
 ) {
-  const child = spawn(command, args);
+  const child = spawn(command, args, { env: process.env });
   if (stream) {
     stream.pipe(child.stdin);
   }

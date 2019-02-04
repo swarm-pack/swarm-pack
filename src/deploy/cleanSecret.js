@@ -14,7 +14,6 @@ function _querySecrets({ secrets, manifests }) {
         const oldSecrets = JSON.parse(
           tempString.substr(0, tempString.length - 2) + "]"
         )
-          .filter(s => s.name.indexOf(`pack__${manifests.name}__`) > -1)
           .filter(s => secrets.findIndex(ss => ss.name === s.name) === -1);
         resolve(oldSecrets);
       } else {
@@ -37,7 +36,7 @@ function _querySecrets({ secrets, manifests }) {
     pipeableSpawn(
       null,
       "docker",
-      ["secret", "ls", "--format", '{"id": "{{.ID}}", "name": "{{.Name}}"},'],
+      ["secret", "ls", "--filter", `label=pack.manifest.name=${manifests.name}`,"--format", '{"id": "{{.ID}}", "name": "{{.Name}}"},'],
       onExit,
       onError,
       onStdout,

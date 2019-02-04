@@ -1,6 +1,7 @@
 const yaml = require("js-yaml");
 const cuid = require("cuid");
 const _ = require("lodash");
+const path = require('path');
 const precompile = require("./precompile");
 const postcompile = require("./postcompile");
 
@@ -13,9 +14,7 @@ function compile({ template, values, secrets, manifests }) {
   let allSecrets;
   function externalSecret(secret_name) {
     if (allSecrets.findIndex(s => s.name === secret_name) !== -1) {
-      const secretName = `pack__${
-        manifests.name
-      }__${secret_name}__${cuid.slug()}`;
+      const secretName = `pack_${manifests.name}_${secret_name}_${cuid.slug()}`;
 
       secretReg.push({
         name: secretName,
@@ -67,8 +66,10 @@ function compile({ template, values, secrets, manifests }) {
   };
 }
 
-function index() {
-  const preCompile = precompile(__dirname + "/../../pack");
+function index(loc) {
+  const packloc = !path.isAbsolute(loc) ? path.resolve(loc) : loc;
+
+  const preCompile = precompile(packloc);
   const compiled = compile(preCompile);
   const postCompiled = postcompile(compiled);
   return postCompiled;

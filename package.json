@@ -9,7 +9,9 @@
   },
   "dependencies": {
     "align-yaml": "^0.1.8",
+    "cli-table": "^0.3.1",
     "command-line-args": "^5.0.2",
+    "commander": "^2.19.0",
     "cuid": "^2.1.4",
     "docker-service-api": "^17.12.19",
     "js-yaml": "^3.12.1",
