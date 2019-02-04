@@ -2,11 +2,7 @@
   "name": "swarm-pack",
   "version": "1.0.0",
   "description": "Package management for Docker Swarm",
-  "main": "index.js",
-  "directories": {
-    "test": "test",
-    "start": "node src/index.js"
-  },
+  "main": "src/cli/pack.js",
   "dependencies": {
     "align-yaml": "^0.1.8",
     "cli-table": "^0.3.1",
@@ -24,7 +20,8 @@
   "devDependencies": {},
   "scripts": {
     "start": "node src/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "package": "pkg src/cli/pack.js --out-path ./build"
   },
   "repository": {
     "type": "git",
