@@ -5,30 +5,25 @@ services:
     image: mysql:5.7
     volumes:
       - db_data:/var/lib/mysql
-    {{> partial.yml}}
-
+{% include "pack/partial.yml" %}
       MYSQL_ROOT_PASSWORD: somewordpress
       MYSQL_DATABASE: wordpress
       MYSQL_USER: {{ wordpressuser }}
       MYSQL_PASSWORD: {{ wordpresspassword }}
-
-  wordpress:
+  wordpress_2:
     depends_on:
       - db
     image: wordpress:latest
     ports:
-      - "8000:80"
-    {{> partial.yml}}
-
+      - "8001:80"
+{% include "pack/partial.yml" %}
       WORDPRESS_DB_HOST: db:3306
       WORDPRESS_DB_USER: {{ wordpressuser }}
       WORDPRESS_DB_PASSWORD: {{ wordpresspassword }}
     secrets:
-      - my_secret_data_2
+      - source: {{ external_secret("my_secret_data_2")}}
+        target: my_secret
 
 volumes:
   db_data: {}
 
-secrets:
-  my_secret_data_2:
-    external: true

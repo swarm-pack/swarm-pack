@@ -595,7 +595,6 @@ moLoop() {
     done
 }
 
-
 # Internal: Parse a block of text, writing the result to stdout.
 #
 # $1 - Block of text to change
@@ -614,6 +613,7 @@ moParse() {
     # Find open tags
     moSplit moContent "$1" '{{' '}}'
 
+    echo 'moParse ---'
     while [[ "${#moContent[@]}" -gt 1 ]]; do
         moTrimWhitespace moTag "${moContent[1]}"
         moNextIsBeginning=false
@@ -624,7 +624,7 @@ moParse() {
                 # Sets context
                 moStandaloneAllowed moContent "${moContent[@]}" "$moIsBeginning"
                 moTrimWhitespace moTag "${moTag:1}"
-                
+
                 # Split arguments from the tag name. Arguments are passed to
                 # functions.
                 moArgs=$moTag
@@ -634,9 +634,14 @@ moParse() {
                 moFindEndTag moBlock "$moContent" "$moTag"
                 moFullTagName moTag "$moCurrent" "$moTag"
 
+                # echo $moTag
                 if moTest "$moTag"; then
+
                     # Show / loop / pass through function
                     if moIsFunction "$moTag"; then
+                        echo $moTag
+                        echo ${moBlock}
+                        echo $moArgs
                         #: Consider piping the output to moGetContent
                         #: so the lambda does not execute in a subshell?
                         moContent=$(moCallFunction "$moTag" "${moBlock[0]}" "$moArgs")
@@ -645,6 +650,7 @@ moParse() {
                     elif moIsArray "$moTag"; then
                         eval "moLoop \"\${moBlock[0]}\" \"$moTag\" \"\${!${moTag}[@]}\""
                     else
+
                         moParse "${moBlock[0]}" "$moCurrent" true
                     fi
                 fi

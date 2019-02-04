@@ -1,2 +1,2 @@
-restart: always
-environment:
+    restart: always
+    environment:
