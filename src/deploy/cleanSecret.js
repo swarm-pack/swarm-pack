@@ -12,9 +12,10 @@ function _querySecrets({ secrets, manifests }) {
         s.push(null);
         const tempString = await toString(s);
         const oldSecrets = JSON.parse(
-          tempString.substr(0, tempString.length - 2) + "]"
-        )
-          .filter(s => secrets.findIndex(ss => ss.name === s.name) === -1);
+          tempString.length > 2
+            ? tempString.substr(0, tempString.length - 2)
+            : tempString + "]"
+        ).filter(s => secrets.findIndex(ss => ss.name === s.name) === -1);
         resolve(oldSecrets);
       } else {
         reject();
@@ -36,7 +37,14 @@ function _querySecrets({ secrets, manifests }) {
     pipeableSpawn(
       null,
       "docker",
-      ["secret", "ls", "--filter", `label=pack.manifest.name=${manifests.name}`,"--format", '{"id": "{{.ID}}", "name": "{{.Name}}"},'],
+      [
+        "secret",
+        "ls",
+        "--filter",
+        `label=pack.manifest.name=${manifests.name}`,
+        "--format",
+        '{"id": "{{.ID}}", "name": "{{.Name}}"},'
+      ],
       onExit,
       onError,
       onStdout,
@@ -79,7 +87,7 @@ async function _cleanSecret(secrets) {
 }
 
 async function cleanSecrets({ secrets, manifests }) {
-  const s = await _querySecrets({ secrets,  manifests});
+  const s = await _querySecrets({ secrets, manifests });
   return await _cleanSecret(s);
 }
 
