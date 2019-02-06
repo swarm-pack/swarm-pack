@@ -10,11 +10,12 @@ function _querySecrets({ secrets, manifests }) {
     onExit = async (code, signal) => {
       if (code === 0) {
         s.push(null);
+
         const tempString = await toString(s);
         const oldSecrets = JSON.parse(
-          tempString.length > 2
+        (tempString.length > 2
             ? tempString.substr(0, tempString.length - 2)
-            : tempString + "]"
+            : tempString) + "]"
         ).filter(s => secrets.findIndex(ss => ss.name === s.name) === -1);
         resolve(oldSecrets);
       } else {
