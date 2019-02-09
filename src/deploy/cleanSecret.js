@@ -84,7 +84,10 @@ async function _cleanASecret(secret) {
 }
 
 async function _cleanSecret(secrets) {
-  return await Promise.all(secrets.map(s => _cleanASecret(s)));
+  return await Promise.all(secrets.map(s => _cleanASecret(s)))
+                .catch((err) => {
+                  console.log('Error creating secrets', err);
+                })
 }
 
 async function cleanSecrets({ secrets, manifests }) {

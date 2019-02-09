@@ -86,7 +86,8 @@ async function cleanOutdatedService({ deployedService, manifests }) {
       ) === -1
   );
 
-  return Promise.all(outdatedSvcs.map(svc => _cleanAService(svc)));
+  return Promise.all(outdatedSvcs.map(svc => _cleanAService(svc)))
+          .catch((err) => console.log(err));
 }
 
 module.exports = cleanOutdatedService;
