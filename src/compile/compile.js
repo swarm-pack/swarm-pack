@@ -5,26 +5,26 @@ const path = require('path');
 const precompile = require("./precompile");
 const postcompile = require("./postcompile");
 
-function compile({ template, values, secrets, manifests }) {
+function compile({ template, values, manifests, location }) {
   const nunjucks = require("nunjucks");
   const env = nunjucks.configure({ autoescape: true });
-  env.addGlobal("external_secret", externalSecret);
 
-  let secretReg = [];
-  let allSecrets;
-  function externalSecret(secret_name) {
-    if (allSecrets.findIndex(s => s.name === secret_name) !== -1) {
-      const secretName = `pack_${manifests.name}_${secret_name}_${cuid.slug()}`;
+  env.addGlobal("secret_from_file", (source) => secretFrom(source, 'file'));
+  env.addGlobal("secret_from_string", (source) => secretFrom(source, 'string'));
 
-      secretReg.push({
-        name: secretName,
-        sType: "external",
-        value:
-          allSecrets[allSecrets.findIndex(s => s.name === secret_name)].value
-      });
+  const secrets = [];
 
-      return secretName;
+  function sanitizeName(name) {
+    return name.substring(0,8).replace(/ /g,"_");
+  }
+
+  function secretFrom(source, type) {
+    const name = `pack_${manifests.name}_${sanitizeName(source)}_${cuid.slug()}`;
+    if (type === 'file') {
+      source = path.join(location, 'secrets', source)
     }
+    secrets.push({ type, name, source });
+    return name;
   }
 
   allSecrets = secrets;
@@ -32,15 +32,13 @@ function compile({ template, values, secrets, manifests }) {
 
   const parsed = yaml.safeLoad(interpolatedTpl);
 
-  if (secretReg.length > 0) {
-    const existingSecrets = parsed.secrets || {};
+  //Generate global secrets for any service secrets we processed (e.g. with secret_from_file)
+  if (secrets.length > 0) {
 
-    const genSecrets = secretReg.reduce((p, s) => {
-      const ps = Object.assign({}, p, { [s.name]: { [s.sType]: true } });
-      return ps;
-    }, existingSecrets);
-
-    parsed.secrets = Object.assign({}, genSecrets);
+    parsed.secrets = secrets.reduce((obj, secret) => { 
+      obj[secret.name] = { 'external': true };
+      return obj;
+    }, parsed.secrets || {});
   }
 
   _.forEach(parsed.services, function(config, service) {
@@ -60,7 +58,7 @@ function compile({ template, values, secrets, manifests }) {
   return {
     template,
     values,
-    secrets: secretReg,
+    secrets,
     compose: parsed,
     manifests
   };

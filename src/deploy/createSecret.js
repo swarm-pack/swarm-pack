@@ -1,9 +1,10 @@
 const { Readable } = require("stream");
+const { execFile } = require("child_process");
 const { pipeableSpawn } = require("../utils");
 
 function createSecret(secret, manifests) {
   return new Promise(function(resolve, reject) {
-    const { name, value } = secret;
+    const { type, name, source } = secret;
     let rejected = false;
     const rejectOnce = (...args) => {
       if (!rejected) {
@@ -12,9 +13,11 @@ function createSecret(secret, manifests) {
       }
     };
 
-    var s = new Readable();
-    s.push(value);
-    s.push(null);
+    if (type === 'string') {
+      var s = new Readable();
+      s.push(source);
+      s.push(null);
+    }
 
     console.log(`Creating secret ${name}`);
 
@@ -31,22 +34,41 @@ function createSecret(secret, manifests) {
     };
 
     const onStdout = data => {
-      console.log(`${data}`);
+      console.log(`${data.toString()}`);
     };
 
     const onStderr = data => {
       console.log(`${data}`);
     };
 
-    pipeableSpawn(
-      s,
-      "docker",
-      ["secret", "create", "--label", `pack.manifest.name=${manifests.name}`,name, "-"],
-      onExit,
-      onError,
-      onStdout,
-      onStderr
-    );
+    if (type === 'string') {
+
+      pipeableSpawn(
+        s,
+        "docker",
+        ["secret", "create", "--label", `pack.manifest.name=${manifests.name}`,name, "-"],
+        onExit,
+        onError,
+        onStdout,
+        onStderr
+      )
+    }else {
+      //File
+      execFile("docker",
+        ["secret", "create", "--label", `pack.manifest.name=${manifests.name}`,name, source],
+        { env: process.env },
+        (error, stdout, stderr) => {
+          if (error) {
+            onError(error);
+          }else {
+            console.log(stdout);
+            onExit(0)
+          }
+        }
+      );
+    }
+
+    
   });
 }
 
