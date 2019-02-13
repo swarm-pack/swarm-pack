@@ -1,7 +1,7 @@
 const { spawn } = require("child_process");
 const { Readable } = require("stream");
 const _ = require("lodash");
-const { pipeToDocker } = require("../utils");
+const { pipeToDocker } = require("../utils/docker");
 
 function deployToStack({ compose, stack }) {
   console.log("Start deploying");

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 const program = require("commander");
-const { addDockerArgs } = require("../utils");
+const { addDockerArgs } = require("../utils/docker");
 
 program
   .version("0.0.1")

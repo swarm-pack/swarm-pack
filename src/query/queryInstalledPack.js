@@ -1,5 +1,5 @@
 const _ = require("lodash");
-const { pipeToDocker } = require("../utils");
+const { pipeToDocker } = require("../utils/docker");
 
 function queryInstalledPack() {
   return new Promise((resolve, reject) => {

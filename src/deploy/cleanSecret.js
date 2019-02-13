@@ -1,6 +1,6 @@
 const { Readable } = require("stream");
 const toString = require("stream-to-string");
-const { pipeToDocker } = require("../utils");
+const { pipeToDocker } = require("../utils/docker");
 
 function _querySecrets({ secrets, manifests }) {
   return new Promise((resolve, reject) => {

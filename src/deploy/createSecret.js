@@ -1,5 +1,5 @@
 const { Readable } = require("stream");
-const { pipeToDocker, execDocker } = require("../utils");
+const { pipeToDocker, execDocker } = require("../utils/docker");
 
 function createSecret(secret, manifests) {
   return new Promise(function(resolve, reject) {
