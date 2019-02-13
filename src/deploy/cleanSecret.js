@@ -1,42 +1,10 @@
 const { Readable } = require("stream");
 const toString = require("stream-to-string");
-const { pipeToDocker } = require("../utils/docker");
+const { pipeToDocker, execDocker } = require("../utils/docker");
 
 function _querySecrets({ secrets, manifests }) {
   return new Promise((resolve, reject) => {
-    const s = new Readable();
-    s._read = function() {};
-    s.push("[");
-    onExit = async (code, signal) => {
-      if (code === 0) {
-        s.push(null);
-
-        const tempString = await toString(s);
-        const oldSecrets = JSON.parse(
-        (tempString.length > 2
-            ? tempString.substr(0, tempString.length - 2)
-            : tempString) + "]"
-        ).filter(s => secrets.findIndex(ss => ss.name === s.name) === -1);
-        resolve(oldSecrets);
-      } else {
-        reject();
-      }
-    };
-
-    onError = error => {
-      reject(error);
-    };
-
-    onStdout = data => {
-      s.push(data);
-    };
-
-    onStderr = data => {
-      console.log(`stderr: ${data}`);
-    };
-
-    pipeToDocker(
-      null,
+    execDocker(
       [
         "secret",
         "ls",
@@ -44,11 +12,21 @@ function _querySecrets({ secrets, manifests }) {
         `label=pack.manifest.name=${manifests.name}`,
         "--format",
         '{"id": "{{.ID}}", "name": "{{.Name}}"},'
-      ],
-      onExit,
-      onError,
-      onStdout,
-      onStderr
+      ], { env: process.env },
+      (error, stdout, stderr) => {
+        if (error) {
+          reject(new Error(stderr));
+        }else {
+          
+          const oldSecrets = JSON.parse('['+
+          (stdout.length > 2
+              ? stdout.substr(0, stdout.length - 2)
+              : stdout) + "]"
+          ).filter(s => secrets.findIndex(ss => ss.name === s.name) === -1);
+
+          resolve(oldSecrets);
+        }
+      }
     );
   });
 }
@@ -60,7 +38,7 @@ async function _cleanASecret(secret) {
         console.log(`Secret ${secret.name} cleaned`);
         resolve();
       } else {
-        reject();
+        reject(new Error(`Error cleaning secret ${secret.name}`));
       }
     };
 
