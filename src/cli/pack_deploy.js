@@ -10,9 +10,9 @@ function pack_deploy(pack, stack, program) {
   }
 
   if (stack && pack) {
-    if (program.host) {
-      process.env.DOCKER_HOST = program.host;
-    }
+    // if (program.host) {
+    //  process.env.DOCKER_HOST = program.host;
+    // }
     compileAndDeploy(stack, pack);
   }
 }

@@ -1,6 +1,6 @@
 const { Readable } = require("stream");
 const toString = require("stream-to-string");
-const { pipeableSpawn } = require("../utils");
+const { pipeToDocker } = require("../utils");
 
 function _querySecrets({ secrets, manifests }) {
   return new Promise((resolve, reject) => {
@@ -35,9 +35,8 @@ function _querySecrets({ secrets, manifests }) {
       console.log(`stderr: ${data}`);
     };
 
-    pipeableSpawn(
+    pipeToDocker(
       null,
-      "docker",
       [
         "secret",
         "ls",
@@ -71,9 +70,8 @@ async function _cleanASecret(secret) {
 
     onNoop = () => {};
     console.log(`Cleaning secret ${secret.name}`);
-    pipeableSpawn(
+    pipeToDocker(
       null,
-      "docker",
       ["secret", "rm", secret.id],
       onExit,
       onError,

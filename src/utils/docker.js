@@ -1,4 +1,18 @@
-const { spawn } = require("child_process");
+const { spawn, execFile } = require("child_process");
+
+const globalArgs = []; //[['-H', 'localhost']]
+
+function addDockerArgs(args) {
+  globalArgs.push(args);
+}
+
+function pipeToDocker(stream, args, onExit, onError, onStdout, onStderr) {
+  return pipeableSpawn(stream, 'docker', globalArgs.flat().concat(args), onExit, onError, onStdout, onStderr)
+}
+
+function execDocker(args, opts, cb) {
+  return execFile("docker", globalArgs.flat().concat(args), opts, cb)
+}
 
 function pipeableSpawn(
   stream,
@@ -48,5 +62,8 @@ function pipeableSpawn(
 }
 
 module.exports = {
-  pipeableSpawn
+  pipeableSpawn,
+  addDockerArgs,
+  execDocker,
+  pipeToDocker
 };

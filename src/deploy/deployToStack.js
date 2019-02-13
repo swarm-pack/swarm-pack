@@ -1,7 +1,7 @@
 const { spawn } = require("child_process");
 const { Readable } = require("stream");
 const _ = require("lodash");
-const { pipeableSpawn } = require("../utils");
+const { pipeToDocker } = require("../utils");
 
 function deployToStack({ compose, stack }) {
   console.log("Start deploying");
@@ -75,9 +75,8 @@ function deployToStack({ compose, stack }) {
       console.log(`${data}`);
     }
 
-    pipeableSpawn(
+    pipeToDocker(
       s,
-      "docker",
       ["stack", "deploy", "--compose-file", "-", stack],
       onExit,
       onError,

@@ -1,5 +1,5 @@
 const _ = require("lodash");
-const { pipeableSpawn } = require("../utils");
+const { pipeToDocker } = require("../utils");
 
 function queryInstalledPack() {
   return new Promise((resolve, reject) => {
@@ -42,9 +42,8 @@ function queryInstalledPack() {
       packs = _.uniqWith(packs, _.isEqual);
     };
 
-    pipeableSpawn(
+    pipeToDocker(
       null,
-      "docker",
       ["ps", "--format", "{{.Labels}}"],
       onExit,
       onError,

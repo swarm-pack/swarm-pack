@@ -1,6 +1,5 @@
 const { Readable } = require("stream");
-const { execFile } = require("child_process");
-const { pipeableSpawn } = require("../utils");
+const { pipeToDocker, execDocker } = require("../utils");
 
 function createSecret(secret, manifests) {
   return new Promise(function(resolve, reject) {
@@ -43,9 +42,8 @@ function createSecret(secret, manifests) {
 
     if (type === 'string') {
 
-      pipeableSpawn(
+      pipeToDocker(
         s,
-        "docker",
         ["secret", "create", "--label", `pack.manifest.name=${manifests.name}`,name, "-"],
         onExit,
         onError,
@@ -53,9 +51,7 @@ function createSecret(secret, manifests) {
         onStderr
       )
     }else {
-      //File
-      execFile("docker",
-        ["secret", "create", "--label", `pack.manifest.name=${manifests.name}`,name, source],
+      execDocker(["secret", "create", "--label", `pack.manifest.name=${manifests.name}`,name, source],
         { env: process.env },
         (error, stdout, stderr) => {
           if (error) {

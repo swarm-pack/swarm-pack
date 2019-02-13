@@ -1,5 +1,5 @@
 const _ = require("lodash");
-const { pipeableSpawn } = require("../utils");
+const { pipeToDocker } = require("../utils");
 
 async function _queryService({ manifests }) {
   return new Promise((resolve, reject) => {
@@ -28,9 +28,8 @@ async function _queryService({ manifests }) {
       console.log(`${data}`);
     };
 
-    pipeableSpawn(
+    pipeToDocker(
       null,
-      "docker",
       [
         "service",
         "ls",
@@ -63,9 +62,8 @@ async function _cleanAService({ id }) {
 
     const noOp = () => {};
 
-    pipeableSpawn(
+    pipeToDocker(
       null,
-      "docker",
       ["service", "rm", id],
       onExit,
       onError,
