@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const program = require("commander");
+const docker = require("../services/docker");
 const { addDockerArgs } = require("../utils/docker");
 
 program
@@ -9,7 +10,8 @@ program
   .description("list deployed pack")
   .option("-H, --host <host>", "remote docker host")
   .on("option:host", function() {
-    addDockerArgs(['-H', this.host])
+    addDockerArgs(['-H', this.host]);
+    docker.init({ socketPath: this.host });
   })
   .action(require("./pack_ls"));
 
@@ -19,6 +21,7 @@ program
   .option("-H, --host <host>", "remote docker host")
   .on("option:host", function() {
     addDockerArgs(['-H', this.host])
+    docker.init({ socketPath: this.host });
   })
   .action(require("./pack_deploy"));
 
