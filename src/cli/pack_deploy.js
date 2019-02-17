@@ -1,4 +1,4 @@
-const compileAndDeploy = require("../index");
+const { compileAndDeploy } = require("../index");
 
 function pack_deploy(packDir, stack, program) {
 

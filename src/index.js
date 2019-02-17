@@ -27,4 +27,8 @@ async function compileAndDeploy({ stack, packDir = process.cwd(), values = {}}) 
 
 }
 
-module.exports = compileAndDeploy
+module.exports = { 
+  compileAndDeploy,
+  compile,
+  deploy
+}
