@@ -1,71 +1,25 @@
-const { Readable } = require("stream");
-const { pipeToDocker, execDocker } = require("../utils/docker");
+const fs = require('fs');
+const docker = require('../services/docker');
 
-function createSecret(secret, manifests) {
-  return new Promise(function(resolve, reject) {
-    const { type, name, source } = secret;
-    let rejected = false;
-    const rejectOnce = (...args) => {
-      if (!rejected) {
-        rejected = true;
-        reject(...args);
-      }
-    };
+function formatSecretData({ name, type, source }) {
+  if (type === 'file') {
+    return fs.readFileSync(source).toString('base64')
+  }
+  // Default to type === 'string'
+  return Buffer.from(source, 'utf8').toString('base64')
+}
 
-    if (type === 'string') {
-      var s = new Readable();
-      s.push(source);
-      s.push(null);
-    }
-
-    console.log(`Creating secret ${name}`);
-
-    const onExit = (code, signal) => {
-      if (code === 0) {
-        resolve();
-      } else {
-        rejectOnce();
-      }
-    };
-
-    const onError = err => {
-      rejectOnce(err);
-    };
-
-    const onStdout = data => {
-      console.log(`${data.toString()}`);
-    };
-
-    const onStderr = data => {
-      console.log(`${data}`);
-    };
-
-    if (type === 'string') {
-
-      pipeToDocker(
-        s,
-        ["secret", "create", "--label", `pack.manifest.name=${manifests.name}`,name, "-"],
-        onExit,
-        onError,
-        onStdout,
-        onStderr
-      )
-    }else {
-      execDocker(["secret", "create", "--label", `pack.manifest.name=${manifests.name}`,name, source],
-        { env: process.env },
-        (error, stdout, stderr) => {
-          if (error) {
-            onError(error);
-          }else {
-            console.log(stdout);
-            onExit(0)
-          }
-        }
-      );
-    }
-
-    
-  });
+function createSecret(secret, manifests, stack) {
+  return docker.client.createSecret({
+    "Name": secret.name,
+    "Labels": {
+      "pack.manifest.name": manifests.name,
+      "com.docker.stack.namespace": stack
+    },
+    "Data": formatSecretData(secret)
+  }).then((data) => {
+    console.log(`Created secret ${secret.name}`)
+  })
 }
 
 module.exports = createSecret;
