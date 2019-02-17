@@ -4,7 +4,7 @@ const cleanSecret = require("./cleanSecret");
 const cleanOutdatedService = require("./cleanOutdatedService");
 
 async function deploy({ secrets, compose, manifests, stack }) {
-  await Promise.all(secrets.map(s => createSecret(s, manifests)))
+  await Promise.all(secrets.map(s => createSecret(s, manifests, stack)))
   		.catch((err) => {
         console.log('Error creating secrets', err);
       });

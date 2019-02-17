@@ -10,6 +10,7 @@
     "commander": "^2.19.0",
     "cuid": "^2.1.4",
     "docker-service-api": "^17.12.19",
+    "fs-extra": "^7.0.1",
     "js-yaml": "^3.12.1",
     "lodash": "^4.17.11",
     "nunjucks": "^3.1.7",

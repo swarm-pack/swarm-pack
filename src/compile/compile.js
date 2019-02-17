@@ -2,12 +2,11 @@ const yaml = require("js-yaml");
 const cuid = require("cuid");
 const _ = require("lodash");
 const path = require('path');
-const precompile = require("./precompile");
-const postcompile = require("./postcompile");
 
-function compile({ template, values, manifests, location }) {
+function compile({ template, values, manifests, packDir, stack }) {
+
   const nunjucks = require("nunjucks");
-  const env = nunjucks.configure({ autoescape: true });
+  const env = nunjucks.configure({ autoescape: true });  
 
   env.addGlobal("secret_from_file", (source) => secretFrom(source, 'file'));
   env.addGlobal("secret_from_string", (source) => secretFrom(source, 'string'));
@@ -21,7 +20,7 @@ function compile({ template, values, manifests, location }) {
   function secretFrom(source, type) {
     const name = `pack_${manifests.name}_${sanitizeName(source)}_${cuid.slug()}`;
     if (type === 'file') {
-      source = path.join(location, 'secrets', source)
+      source = path.join(packDir, 'secrets', source)
     }
     secrets.push({ type, name, source });
     return name;
@@ -34,13 +33,14 @@ function compile({ template, values, manifests, location }) {
 
   //Generate global secrets for any service secrets we processed (e.g. with secret_from_file)
   if (secrets.length > 0) {
-
     parsed.secrets = secrets.reduce((obj, secret) => { 
       obj[secret.name] = { 'external': true };
       return obj;
     }, parsed.secrets || {});
   }
 
+  // Add swarm-pack service lables
+  // TODO - allow passing extra labels from e.g. swarm-sync 
   _.forEach(parsed.services, function(config, service) {
     const labels =  {
       "pack.manifest.name": manifests.name,
@@ -59,17 +59,10 @@ function compile({ template, values, manifests, location }) {
     template,
     values,
     secrets,
-    compose: parsed,
-    manifests
+    compose: yaml.safeDump(parsed),
+    manifests,
+    stack
   };
 }
 
-function index(loc) {
-  const packloc = !path.isAbsolute(loc) ? path.resolve(loc) : loc;
-
-  const preCompile = precompile(packloc);
-  const compiled = compile(preCompile);
-  const postCompiled = postcompile(compiled);
-  return postCompiled;
-}
-module.exports = index;
+module.exports = compile;

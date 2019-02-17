@@ -1,20 +1,18 @@
 const compileAndDeploy = require("../index");
 
-function pack_deploy(pack, stack, program) {
+function pack_deploy(packDir, stack, program) {
+
   if (!stack) {
     console.error("Stack name is required");
   }
 
-  if (!pack) {
+  if (!packDir) {
     console.error("Pack name or location is required");
   }
 
-  if (stack && pack) {
-    // if (program.host) {
-    //  process.env.DOCKER_HOST = program.host;
-    // }
-    compileAndDeploy(stack, pack);
-  }
+
+  compileAndDeploy({ packDir, stack });
+
 }
 
 module.exports = pack_deploy;
