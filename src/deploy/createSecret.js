@@ -1,7 +1,7 @@
 const { Readable } = require("stream");
 const { pipeToDocker, execDocker } = require("../utils/docker");
 
-function createSecret(secret, manifests) {
+function createSecret({secret, manifests, stack}) {
   return new Promise(function(resolve, reject) {
     const { type, name, source } = secret;
     let rejected = false;
@@ -40,18 +40,28 @@ function createSecret(secret, manifests) {
       console.log(`${data}`);
     };
 
+    const args = [
+      "secret", 
+      "create",
+      "--label",
+      `pack.manifest.name=${manifests.name}`,
+      "--label",
+      `com.docker.stack.namespace=${stack}`,
+      name
+    ]
+
     if (type === 'string') {
 
       pipeToDocker(
         s,
-        ["secret", "create", "--label", `pack.manifest.name=${manifests.name}`,name, "-"],
+        args.concat(['-']),
         onExit,
         onError,
         onStdout,
         onStderr
       )
     }else {
-      execDocker(["secret", "create", "--label", `pack.manifest.name=${manifests.name}`,name, source],
+      execDocker(args.concat([source]),
         { env: process.env },
         (error, stdout, stderr) => {
           if (error) {
