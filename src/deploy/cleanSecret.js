@@ -1,4 +1,3 @@
-const _ = require("lodash");
 const docker = require('../services/docker');
 
 async function removeSecret({ID}) {
