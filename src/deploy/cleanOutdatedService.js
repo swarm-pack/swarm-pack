@@ -1,15 +1,15 @@
 const _ = require("lodash");
-const docker = require('../services/docker');
+const docker = require('../utils/docker');
 
 async function removeService({ID}) {
-  return docker.client.getService(ID)
+  return docker.getDockerodeClient().getService(ID)
     .remove()
     .then(data => console.log(`Cleaned service ${ID}`))
 }
 
 async function cleanOutdatedServices({ deployedService, manifests, stack }) {
 
-  docker.client.listServices()
+  docker.getDockerodeClient().listServices()
     .then((result) => {
       return result.filter((service) => 
         service.Spec.Labels['pack.manifest.name'] === manifests.name &&

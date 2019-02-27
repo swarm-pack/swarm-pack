@@ -1,14 +1,14 @@
-const docker = require('../services/docker');
+const docker = require('../utils/docker');
 
 async function removeSecret({ID}) {
-  return docker.client.getSecret(ID)
+  return docker.getDockerodeClient().getSecret(ID)
     .remove()
     .then(data => console.log(`Cleaned secret ${ID}`))
 }
 
 async function cleanSecrets({ secrets, manifests, stack }) {
 
-  docker.client.listSecrets()
+  docker.getDockerodeClient().listSecrets()
     .then((result) => 
       result.filter((secret) => 
         secret.Spec.Labels['pack.manifest.name'] === manifests.name

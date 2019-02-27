@@ -3,8 +3,20 @@ const fs = require('fs-extra');
 const {resolve} = require('path');
 const compile = require("./compile/compile");
 const deploy = require("./deploy");
+const docker = require("../utils/docker");
 
-async function compileAndDeploy({ stack, packDir = process.cwd(), values = {}}) {
+async function compileAndDeploy({ 
+  stack, 
+  packDir = process.cwd(),
+  values = {},
+  secretsDir = resolve(process.cwd(), 'secrets'),
+  dockerConfig = false
+}) {
+
+  // Config passed to method
+  if (dockerConfig) {
+    docker.configure({ ...dockerConfig });
+  }
 
   // Required files
   const packContent = yaml.safeLoad( await fs.readFile(resolve(packDir, 'packfile.yml')))

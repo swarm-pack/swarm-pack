@@ -1,5 +1,5 @@
 const fs = require('fs');
-const docker = require('../services/docker');
+const docker = require('../utils/docker');
 
 function formatSecretData({ name, type, source }) {
   if (type === 'file') {
@@ -9,8 +9,8 @@ function formatSecretData({ name, type, source }) {
   return Buffer.from(source, 'utf8').toString('base64')
 }
 
-function createSecret(secret, manifests, stack) {
-  return docker.client.createSecret({
+function createSecret({secret, manifests, stack}) {
+  return docker.getDockerodeClient().createSecret({
     "Name": secret.name,
     "Labels": {
       "pack.manifest.name": manifests.name,

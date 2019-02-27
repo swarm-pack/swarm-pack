@@ -1,17 +1,60 @@
+const Docker = require('dockerode');
 const { spawn, execFile } = require("child_process");
 
-const globalArgs = []; //[['-H', 'localhost']]
+let config = {
+  socketPath: '/var/run/docker.sock',
+  url: 'unix:///var/run/docker.sock'
+};
 
-function addDockerArgs(args) {
-  globalArgs.push(args);
+function configure({ socketPath=false, host=false, port="2375", protocol="http" }) {
+
+  if (socketPath && host) {
+    throw new Error("Cannot specify both socketPath & host in configuration.")
+  }
+
+  if (host && (host.includes(":") || host.includes("/"))) {
+    throw new Error("Unlike docker -H, host should be a hostname only. Use port (--port) and protocol (--protocol) to specify those separately.")
+  }
+
+  if (host) {
+    config = {
+      host, 
+      port, 
+      protocol,
+      url: `${protocol}://${host}:${port}`
+    }
+  } else if( socketPath ) {
+    config = {
+      socketPath,
+      url: `unix://${socketPath}`
+    }
+  }
+}
+
+function getDockerodeClient() {
+
+  if (config.host) {
+    return new Docker({
+      host: config.host,
+      port: config.port,
+      protocol: config.protocol
+    });
+  }
+
+  return new Docker({ socketPath: config.socketPath })
+  
+}
+
+function getDockerArgs() {
+  return ["-H", config.url]
 }
 
 function pipeToDocker(stream, args, onExit, onError, onStdout, onStderr) {
-  return pipeableSpawn(stream, 'docker', globalArgs.flat().concat(args), onExit, onError, onStdout, onStderr)
+  return pipeableSpawn(stream, 'docker', getDockerArgs().concat(args), onExit, onError, onStdout, onStderr)
 }
 
 function execDocker(args, opts, cb) {
-  return execFile("docker", globalArgs.flat().concat(args), opts, cb)
+  return execFile("docker", getDockerArgs().concat(args), opts, cb)
 }
 
 function pipeableSpawn(
@@ -63,7 +106,8 @@ function pipeableSpawn(
 
 module.exports = {
   pipeableSpawn,
-  addDockerArgs,
   execDocker,
-  pipeToDocker
+  pipeToDocker,
+  configure,
+  getDockerodeClient
 };
