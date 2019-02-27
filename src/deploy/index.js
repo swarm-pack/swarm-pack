@@ -11,8 +11,8 @@ async function deploy({ secrets, compose, manifests, stack }) {
 
   const deployedService = await deployToStack({ compose, stack });
 
-  await cleanOutdatedService({ deployedService, manifests });
-  await cleanSecret({ secrets, manifests });
+  await cleanOutdatedService({ deployedService, manifests, stack });
+  await cleanSecret({ secrets, manifests, stack });
 }
 
 module.exports = deploy;

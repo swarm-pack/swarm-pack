@@ -1,91 +1,34 @@
 const _ = require("lodash");
-const { pipeToDocker } = require("../utils/docker");
+const docker = require('../services/docker');
 
-async function _queryService({ manifests }) {
-  return new Promise((resolve, reject) => {
-    let svcs = [];
-    const onExit = (code, signal) => {
-      if (code === 0) {
-        resolve(svcs);
-      } else {
-        reject();
+async function removeService({ID}) {
+  return docker.client.getService(ID)
+    .remove()
+    .then(data => console.log(`Cleaned service ${ID}`))
+}
+
+async function cleanOutdatedServices({ deployedService, manifests, stack }) {
+
+  docker.client.listServices()
+    .then((result) => {
+      return result.filter((service) => 
+        service.Spec.Labels['pack.manifest.name'] === manifests.name &&
+         service.Spec.Labels['com.docker.stack.namespace'] === stack)
+    }).then((matchingServices) => {
+
+      function matchService(service, services) {
+        return services.findIndex(s => {
+          return (s.id && s.id.indexOf(service.ID) > -1) || s.name === service.Spec.Name
+        }) === -1
       }
-    };
 
-    const onError = err => {
-      reject(err);
-    };
+      return matchingServices.filter((service) => matchService(service, deployedService))
 
-    const onStdout = data => {
-      svcs = data
-        .toString()
-        .split(",\n")
-        .filter(s => !_.isEmpty(s))
-        .map(s => ({ id: s.split(";")[0], name: s.split(";")[1] }));
-    };
+    }).then((outdatedServices) => {
+      return Promise.all(outdatedServices.map(service => removeService(service)))
+        .catch((err) => console.log(err));
+    })
 
-    const onStderr = data => {
-      console.log(`${data}`);
-    };
-
-    pipeToDocker(
-      null,
-      [
-        "service",
-        "ls",
-        "--filter",
-        `label=pack.manifest.name=${manifests.name}`,
-        "--format",
-        "{{.ID}};{{.Name}},"
-      ],
-      onExit,
-      onError,
-      onStdout,
-      onStderr
-    );
-  });
 }
 
-async function _cleanAService({ id }) {
-  return new Promise((resolve, reject) => {
-    const onExit = (code, signal) => {
-      if (code === 0) {
-        resolve();
-      } else {
-        reject();
-      }
-    };
-
-    const onError = err => {
-      reject(err);
-    };
-
-    const noOp = () => {};
-
-    pipeToDocker(
-      null,
-      ["service", "rm", id],
-      onExit,
-      onError,
-      noOp,
-      noOp
-    );
-  });
-}
-
-async function cleanOutdatedService({ deployedService, manifests }) {
-  const existingSvcs = await _queryService({ manifests });
-
-  const outdatedSvcs = existingSvcs.filter(
-    esvc =>
-      deployedService.findIndex(
-        dsvc =>
-          (dsvc.id && dsvc.id.indexOf(esvc.id) > -1) || dsvc.name === esvc.name
-      ) === -1
-  );
-
-  return Promise.all(outdatedSvcs.map(svc => _cleanAService(svc)))
-          .catch((err) => console.log(err));
-}
-
-module.exports = cleanOutdatedService;
+module.exports = cleanOutdatedServices;
