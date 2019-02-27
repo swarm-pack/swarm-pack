@@ -1,31 +1,32 @@
-const yaml = require("js-yaml");
+const yaml = require('js-yaml');
 const fs = require('fs-extra');
-const {resolve} = require('path');
-const compile = require("./compile/compile");
-const deploy = require("./deploy");
-const docker = require("./utils/docker");
+const { resolve } = require('path');
+const compile = require('./compile/compile');
+const deploy = require('./deploy');
+const docker = require('./utils/docker');
 
-async function compileAndDeploy({ 
-  stack, 
+async function compileAndDeploy({
+  stack,
   packDir = process.cwd(),
   values = {},
   secretsDir = resolve(packDir, 'secrets'),
   dockerConfig = false
 }) {
-
   // Config passed to method
   if (dockerConfig) {
     docker.configure({ ...dockerConfig });
   }
 
   // Required files
-  const packContent = yaml.safeLoad( await fs.readFile(resolve(packDir, 'packfile.yml')))
-  const template = ( await fs.readFile(resolve(packDir, 'docker-compose.tpl.yml')) ).toString('utf8')
+  const packContent = yaml.safeLoad(await fs.readFile(resolve(packDir, 'packfile.yml')));
+  const template = (await fs.readFile(resolve(packDir, 'docker-compose.tpl.yml'))).toString('utf8');
 
   // Optional files
-  const defaults = yaml.safeLoad( await fs.readFile(resolve(packDir, 'defaults.yml')).catch(() => ''))
+  const defaults = yaml.safeLoad(
+    await fs.readFile(resolve(packDir, 'defaults.yml')).catch(() => '')
+  );
 
-  values = Object.assign({}, defaults, values)
+  const newValues = Object.assign({}, defaults, values);
 
   return deploy(
     compile({
@@ -33,15 +34,14 @@ async function compileAndDeploy({
       packDir,
       secretsDir,
       template,
-      values,
+      values: newValues,
       stack
     })
   );
-
 }
 
-module.exports = { 
+module.exports = {
   compileAndDeploy,
   compile,
   deploy
-}
+};

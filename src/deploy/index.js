@@ -1,13 +1,14 @@
-const createSecret = require("./createSecret");
-const deployToStack = require("./deployToStack");
-const cleanSecret = require("./cleanSecret");
-const cleanOutdatedService = require("./cleanOutdatedService");
+const createSecret = require('./createSecret');
+const deployToStack = require('./deployToStack');
+const cleanSecret = require('./cleanSecret');
+const cleanOutdatedService = require('./cleanOutdatedService');
 
 async function deploy({ secrets, compose, manifests, stack }) {
-  await Promise.all(secrets.map(secret => createSecret({secret, manifests, stack})))
-  		.catch((err) => {
-        console.log('Error creating secrets', err);
-      });
+  await Promise.all(secrets.map(secret => createSecret({ secret, manifests, stack }))).catch(
+    err => {
+      console.log('Error creating secrets', err);
+    }
+  );
 
   const deployedService = await deployToStack({ compose, stack });
 

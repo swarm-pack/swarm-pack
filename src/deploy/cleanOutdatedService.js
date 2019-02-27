@@ -11,7 +11,7 @@ async function cleanOutdatedServices({ deployedService, manifests, stack }) {
 
   docker.getDockerodeClient().listServices()
     .then((result) => {
-      return result.filter((service) => 
+      return result.filter((service) =>
         service.Spec.Labels['pack.manifest.name'] === manifests.name &&
          service.Spec.Labels['com.docker.stack.namespace'] === stack)
     }).then((matchingServices) => {

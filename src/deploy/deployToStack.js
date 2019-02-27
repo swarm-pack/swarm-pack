@@ -1,12 +1,11 @@
-const { spawn } = require("child_process");
-const { Readable } = require("stream");
-const _ = require("lodash");
-const { pipeToDocker } = require("../utils/docker");
+const { Readable } = require('stream');
+const _ = require('lodash');
+const { pipeToDocker } = require('../utils/docker');
 
 function deployToStack({ compose, stack }) {
-  console.log("Start deploying");
+  console.log('Start deploying');
 
-  return new Promise(function(resolve, reject) {
+  return new Promise((resolve, reject) => {
     const updated = [];
     const created = [];
 
@@ -18,25 +17,26 @@ function deployToStack({ compose, stack }) {
       created.push(output);
     }
 
-    var s = new Readable();
+    const s = new Readable();
     s.push(compose);
     s.push(null);
 
+    // eslint-disable-next-line no-unused-vars
     function onExit(code, signal) {
       if (code === 0) {
         let deployedContainer = updated
           .filter(d => !_.isEmpty(d))
           .map(d => {
             const dt = d
-              .replace("Updating service ", "")
-              .replace(" (id: ", ";")
-              .replace(")", "")
-              .replace("\n", "");
-            const split = dt.split(";");
+              .replace('Updating service ', '')
+              .replace(' (id: ', ';')
+              .replace(')', '')
+              .replace('\n', '');
+            const split = dt.split(';');
             return {
               name: split[0],
               id: split[1],
-              type: "updated"
+              type: 'updated'
             };
           });
 
@@ -45,11 +45,11 @@ function deployToStack({ compose, stack }) {
           created
             .filter(d => !_.isEmpty(d))
             .map(d => {
-              const dt = d.replace("Creating service ", "").replace("\n", "");
+              const dt = d.replace('Creating service ', '').replace('\n', '');
               return {
                 name: dt,
                 id: null,
-                type: "created"
+                type: 'created'
               };
             })
         );
@@ -64,11 +64,10 @@ function deployToStack({ compose, stack }) {
     }
 
     function onStdout(stdout) {
-      if (stdout.toString().indexOf("Updating service") > -1) {
+      if (stdout.toString().indexOf('Updating service') > -1) {
         return registerUpdatedService(`${stdout}`);
-      } else {
-        return registerCreatedService(`${stdout}`);
       }
+      return registerCreatedService(`${stdout}`);
     }
 
     function onStderr(data) {
@@ -77,7 +76,7 @@ function deployToStack({ compose, stack }) {
 
     pipeToDocker(
       s,
-      ["stack", "deploy", "--compose-file", "-", stack],
+      ['stack', 'deploy', '--compose-file', '-', stack],
       onExit,
       onError,
       onStdout,
