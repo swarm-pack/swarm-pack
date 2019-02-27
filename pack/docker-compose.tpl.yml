@@ -2,28 +2,27 @@ version: '3.3'
 
 services:
   db:
-    image: mysql:5.7
+    image: {{ mysql.image.repository }}:{{ mysql.image.tag }}
     volumes:
       - db_data:/var/lib/mysql
 {% include "partial.yml" %}
-      MYSQL_ROOT_PASSWORD: somewordpress
-      MYSQL_DATABASE: wordpress
-      MYSQL_USER: {{ wordpressuser }}
-      MYSQL_PASSWORD: {{ wordpresspassword }}
+      MYSQL_ROOT_PASSWORD: {{ mysql.root_password }}
+      MYSQL_DATABASE: {{ database }}
+      MYSQL_USER: {{ user }}
+      MYSQL_PASSWORD: {{ password }}
   wordpress_2:
     depends_on:
       - db
-    image: wordpress:latest
+    image: {{ wordpress.image.repository }}:{{ wordpress.image.tag }}
     ports:
       - "8001:80"
 {% include "partial.yml" %}
       WORDPRESS_DB_HOST: db:3306
-      WORDPRESS_DB_USER: {{ wordpressuser }}
-      WORDPRESS_DB_PASSWORD: {{ wordpresspassword }}
+      WORDPRESS_DB_USER: {{ wordpress.user }}
+      WORDPRESS_DB_PASSWORD: {{ password }}
     secrets:
       - source: {{ secret_from_file("my_secret_data_2")}}
         target: my_secret
 
 volumes:
   db_data: {}
-
