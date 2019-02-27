@@ -2,7 +2,7 @@
   "name": "swarm-pack",
   "version": "1.0.0",
   "description": "Package management for Docker Swarm",
-  "main": "src/cli/pack.js",
+  "main": "src/index.js",
   "dependencies": {
     "align-yaml": "^0.1.8",
     "cli-table": "^0.3.1",
@@ -10,6 +10,7 @@
     "commander": "^2.19.0",
     "cuid": "^2.1.4",
     "docker-service-api": "^17.12.19",
+    "fs-extra": "^7.0.1",
     "dockerode": "^2.5.8",
     "js-yaml": "^3.12.1",
     "lodash": "^4.17.11",
