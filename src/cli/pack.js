@@ -7,7 +7,6 @@ program
   .version("0.0.1")
   .option("-H, --host <host>", "remote docker host")
   .option("--port <port>", "remote docker port")
-  .option("--protocol <protocol>", "remote docker protocol")
   .option("--socketPath <socketPath>", "path to docker daemon socket on filesystem")
 
 // Initial parse to get global options into config

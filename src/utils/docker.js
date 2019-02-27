@@ -6,22 +6,21 @@ let config = {
   url: 'unix:///var/run/docker.sock'
 };
 
-function configure({ socketPath=false, host=false, port="2375", protocol="http" }) {
+function configure({ socketPath=false, host=false, port="2375" }) {
 
   if (socketPath && host) {
     throw new Error("Cannot specify both socketPath & host in configuration.")
   }
 
   if (host && (host.includes(":") || host.includes("/"))) {
-    throw new Error("Unlike docker -H, host should be a hostname only. Use port (--port) and protocol (--protocol) to specify those separately.")
+    throw new Error("Unlike docker -H, host should be a hostname only. Use port (--port) to specify those separately.")
   }
 
   if (host) {
     config = {
       host, 
-      port, 
-      protocol,
-      url: `${protocol}://${host}:${port}`
+      port,
+      url: `tcp://${host}:${port}`
     }
   } else if( socketPath ) {
     config = {
@@ -36,8 +35,7 @@ function getDockerodeClient() {
   if (config.host) {
     return new Docker({
       host: config.host,
-      port: config.port,
-      protocol: config.protocol
+      port: config.port
     });
   }
 

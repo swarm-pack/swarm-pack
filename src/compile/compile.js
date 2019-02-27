@@ -3,7 +3,7 @@ const cuid = require("cuid");
 const _ = require("lodash");
 const path = require('path');
 
-function compile({ template, values, manifests, packDir, stack }) {
+function compile({ template, values, manifests, packDir, secretsDir, stack }) {
 
   const nunjucks = require("nunjucks");
   const env = nunjucks.configure({ autoescape: true });  
@@ -20,7 +20,7 @@ function compile({ template, values, manifests, packDir, stack }) {
   function secretFrom(source, type) {
     const name = `pack_${manifests.name}_${sanitizeName(source)}_${cuid.slug()}`;
     if (type === 'file') {
-      source = path.join(packDir, 'secrets', source)
+      source = path.join(secretsDir, source)
     }
     secrets.push({ type, name, source });
     return name;

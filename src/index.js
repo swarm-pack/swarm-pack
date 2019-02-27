@@ -3,13 +3,13 @@ const fs = require('fs-extra');
 const {resolve} = require('path');
 const compile = require("./compile/compile");
 const deploy = require("./deploy");
-const docker = require("../utils/docker");
+const docker = require("./utils/docker");
 
 async function compileAndDeploy({ 
   stack, 
   packDir = process.cwd(),
   values = {},
-  secretsDir = resolve(process.cwd(), 'secrets'),
+  secretsDir = resolve(packDir, 'secrets'),
   dockerConfig = false
 }) {
 
@@ -31,6 +31,7 @@ async function compileAndDeploy({
     compile({
       manifests: packContent.pack,
       packDir,
+      secretsDir,
       template,
       values,
       stack
