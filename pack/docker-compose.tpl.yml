@@ -21,7 +21,7 @@ services:
       WORDPRESS_DB_USER: {{ wordpress.user }}
       WORDPRESS_DB_PASSWORD: {{ password }}
     secrets:
-      - source: {{ secret_from_file("my_secret_data_2")}}
+      - source: {{ secret_from_value("wordpress.my_secret_data")}}
         target: my_secret
 
 volumes:

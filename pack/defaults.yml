@@ -11,6 +11,12 @@ wordpress:
     repository: wordpress
     tag: latest
     auto: true
+  my_secret_data: |
+    this
+    is
+    a
+    multiline
+    secret
 
 user: wp
 password: changeme

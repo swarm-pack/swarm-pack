@@ -1,28 +1,26 @@
 const fs = require('fs');
 const docker = require('../utils/docker');
 
-function formatSecretData({ type, source }) {
-  if (type === 'file') {
-    return fs.readFileSync(source).toString('base64');
-  }
-  // Default to type === 'string'
-  return Buffer.from(source, 'utf8').toString('base64');
-}
+async function createSecret({ secret, manifests, stack }) {
+  const client = docker.getDockerodeClient();
 
-function createSecret({ secret, manifests, stack }) {
-  return docker
-    .getDockerodeClient()
-    .createSecret({
-      Name: secret.name,
-      Labels: {
-        'pack.manifest.name': manifests.name,
-        'com.docker.stack.namespace': stack
-      },
-      Data: formatSecretData(secret)
-    })
-    .then(() => {
-      console.log(`Created secret ${secret.name}`);
-    });
+  try {
+    await client.createSecret({
+        Name: secret.name,
+        Labels: {
+          'pack.manifest.name': manifests.name,
+          'com.docker.stack.namespace': stack
+        },
+        Data: Buffer.from(secret.value, 'utf8').toString('base64')
+      })
+    console.log(`Created secret ${secret.name}`);
+  } catch (error) {
+    if (error.statusCode === 409) {
+      console.log(`Secret ${secret.name} already exists & will be reused.`)
+    }else {
+      throw error;
+    }
+  }
 }
 
 module.exports = createSecret;
