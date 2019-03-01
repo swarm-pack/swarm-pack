@@ -2,14 +2,15 @@ const yaml = require("js-yaml");
 const cuid = require("cuid");
 const _ = require("lodash");
 const path = require('path');
+const md5 = require('md5');
+const utils = require('../utils')
 
-function compile({ template, values, manifests, packDir, secretsDir, stack }) {
+function compile({ template, values, manifests, packDir, stack }) {
 
   const nunjucks = require("nunjucks");
   const env = nunjucks.configure({ autoescape: true });
 
-  env.addGlobal("secret_from_file", (source) => secretFrom(source, 'file'));
-  env.addGlobal("secret_from_string", (source) => secretFrom(source, 'string'));
+  env.addGlobal("secret_from_value", (key) => secretFromValue(key));
 
   const secrets = [];
 
@@ -17,21 +18,18 @@ function compile({ template, values, manifests, packDir, secretsDir, stack }) {
     return name.substring(0,8).replace(/ /g,"_");
   }
 
-  function secretFrom(source, type) {
-    const name = `pack_${manifests.name}_${sanitizeName(source)}_${cuid.slug()}`;
-    if (type === 'file') {
-      source = path.join(secretsDir, source)
-    }
-    secrets.push({ type, name, source });
+  function secretFromValue(key) {
+    const value = utils.getObjectProperty(key, values);
+    // Max length for name is 64 chars
+    const name = `${key.substr(0,31)}_${md5(value)}`;
+    secrets.push({ value, name })
     return name;
   }
 
-  allSecrets = secrets;
   const interpolatedTpl = nunjucks.renderString(template, values);
-
   const parsed = yaml.safeLoad(interpolatedTpl);
 
-  //Generate global secrets for any service secrets we processed (e.g. with secret_from_file)
+  //Generate global secrets for any service secrets we processed (e.g. with secret_from_value)
   if (secrets.length > 0) {
     parsed.secrets = secrets.reduce((obj, secret) => {
       obj[secret.name] = { 'external': true };

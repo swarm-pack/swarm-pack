@@ -9,7 +9,6 @@ async function compileAndDeploy({
   stack,
   packDir = process.cwd(),
   values = {},
-  secretsDir = resolve(packDir, 'secrets'),
   dockerConfig = false
 }) {
   // Config passed to method
@@ -32,7 +31,6 @@ async function compileAndDeploy({
     compile({
       manifests: packContent.pack,
       packDir,
-      secretsDir,
       template,
       values: newValues,
       stack
