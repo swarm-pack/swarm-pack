@@ -19,9 +19,16 @@ program.command("ls [options]")
     require("./pack_ls")
   });
 
+/**
+ * pack deploy . prod
+ * pack deploy stable/foo prod
+ */
+
 program
   .command("deploy <pack> <stack>")
-  .description("deploy pack to stack")
+  .description(`Deploy a swarm-pack, to a swqrm cluster namespaced to a stack.
+pack - a pack reference in the repo (‘stable/drupal’), a full path to a directory or packaged chart, or a URL.
+stack - a Docker Stack namespace`)
   .action(require("./pack_deploy"));
 
 // Parse to run action

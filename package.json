@@ -18,7 +18,9 @@
     "nunjucks": "^3.1.7",
     "pkg": "^4.3.7",
     "shelljs": "^0.8.3",
-    "stream-to-string": "^1.2.0"
+    "simple-git": "^1.107.0",
+    "stream-to-string": "^1.2.0",
+    "tmp": "^0.0.33"
   },
   "devDependencies": {
     "@babel/cli": "^7.2.3",
