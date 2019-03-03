@@ -2,6 +2,7 @@
 
 const program = require("commander");
 const docker = require("../utils/docker");
+const actions = require("./actions");
 
 program
   .version("0.0.1")
@@ -15,21 +16,25 @@ docker.configure({ ...program });
 
 program.command("ls [options]")
   .description("list deployed pack")
-  .action((q, opts) => {
-    require("./pack_ls")
-  });
-
-/**
- * pack deploy . prod
- * pack deploy stable/foo prod
- */
+  .action(actions.pack_ls);
 
 program
   .command("deploy <pack> <stack>")
   .description(`Deploy a swarm-pack, to a swqrm cluster namespaced to a stack.
 pack - a pack reference in the repo (‘stable/drupal’), a full path to a directory or packaged chart, or a URL.
 stack - a Docker Stack namespace`)
-  .action(require("./pack_deploy"));
+  .action(actions.pack_deploy);
+
+program
+  .command("version <pack>")
+  .description("Get version info for a pack. Includes version from packfile and last git commit hash for pack dir")
+  .action(actions.pack_inspect_version)
+
+program
+  .command("inspect <pack>")
+  .description("Inpsect various details of a pack. Can be repo pack, local directory or git URL.")
+  .action(actions.pack_inspect)
+
 
 // Parse to run action
 program.parse(process.argv)
