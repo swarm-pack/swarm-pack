@@ -1,7 +1,7 @@
 const yaml = require('js-yaml');
 const fs = require('fs-extra');
 const path = require('path');
-const url = require('url');
+const isUrl = require('is-url');
 const simpleGit = require('simple-git/promise');
 const tmp = require('tmp');
 const compile = require('./compile/compile');
@@ -22,6 +22,9 @@ async function compileAndDeploy({
     docker.configure({ ...dockerConfig });
   }
 
+  const tempDir = tmp.dirSync();
+  const repo = simpleGit(tempDir.name);
+
   let packDir;
 
   // Check if packRef is a local dir
@@ -31,23 +34,26 @@ async function compileAndDeploy({
 
   // Check if packRef is official repo
   } else if ( packRef.startsWith('stable/') || packRef.startsWith('incubator/') ) {
-     console.log(`Checking repository for pack...`)
+    console.log(`Checking repository for pack...`)
 
-     // TODO - checkout in ~/.swarm-pack and pull to update when needed
-     // N.B. need to figure out what to do when run as NPM package - probably different behaviour?
+    // TODO - checkout in ~/.swarm-pack and pull to update when needed, i.e. a repo cache
+    // N.B. need to figure out what to do when run as NPM package - probably different behaviour?
 
-      const tempDir = tmp.dirSync();
-      const repo = simpleGit(tempDir.name);
-      await repo.env({ ...process.env }).clone(gitRepoUrl, 'repository')
-      packDir = path.join(tempDir.name, 'repository', packRef);
+    await repo.env({ ...process.env }).clone(gitRepoUrl, 'repository')
+    packDir = path.join(tempDir.name, 'repository', packRef);
 
-    console.log(`checked out to ${packDir}`);
     if (!fs.pathExistsSync(path.resolve(packDir, 'packfile.yml'))) {
       throw new Error(`Pack ${packRef} not found in official repository`);
     }
   // Check if packRef is a git url
-  // } else if (..) { 
-     // TODO
+  } else if ( isUrl(packRef) ) {
+    try {
+      await repo.env({ ...process.env }).clone(packRef, 'custom')
+    }catch (err) {
+      console.error(`Error cloning repository at URL ${packRef}`, err);
+      process.exit(1);
+    }
+    packDir = path.join(tempDir.name, 'custom');
 
   } else { 
      throw new Error(`Couldn't resolve pack reference ${packRef}`);
