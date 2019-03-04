@@ -4,7 +4,7 @@ const path = require('path');
 const compile = require('./compile/compile');
 const deploy = require('./deploy');
 const docker = require('./utils/docker');
-const repo = require('./repo');
+const { inspectPack } = require('./repo');
 
 async function compileAndDeploy({
   stack,
@@ -17,7 +17,7 @@ async function compileAndDeploy({
     docker.configure({ ...dockerConfig });
   }
 
-  const pack = await repo.inspectPack(packRef);
+  const pack = await inspectPack(packRef);
 
   // Required files
   const template = (await fs.readFile(path.join(pack.dir, 'docker-compose.tpl.yml'))).toString('utf8');
@@ -43,5 +43,6 @@ async function compileAndDeploy({
 module.exports = {
   compileAndDeploy,
   compile,
-  deploy
+  deploy,
+  inspectPack
 };
