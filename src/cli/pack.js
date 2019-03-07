@@ -36,6 +36,19 @@ program
   .description("Inpsect various details of a pack. Can be repo pack, local directory or git URL.")
   .action(require("./actions").pack_inspect)
 
+// Waiting for multi-word commands
+// So we can do `swarm-pack cache update` etc
+// https://github.com/tj/commander.js/issues/655
+program
+  .command("cache <action>")
+  .description(`Local repository cache actions:
+clear - clear the local cache
+update - fetch or update the local repo cache`)
+  .action((action) => {
+    if (action === "clear") require("./actions").cache_clear()
+    if (action === "update") require("./actions").cache_update()
+  })
+
 
 // Parse to run action
 program.parse(process.argv)

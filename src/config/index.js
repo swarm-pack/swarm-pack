@@ -9,8 +9,9 @@ let defaults = {};
 let config = {};
 let initialized = false;
 
-const defaultConfigDirName = ".swarm-pack"
-const defaultConfigFileName = "config.yml"
+const defaultConfigDirName = ".swarm-pack";
+const defaultConfigFileName = "config.yml";
+const defaultCacheDirName = "cache";
 
 // Individual config helper for Docker config
 function configureDocker({ socketPath = false, host = false, port = '2375' }) {
@@ -68,6 +69,11 @@ function init({ program, moduleConfig }) {
         fs.mkdir(path.join(os.homedir(), defaultConfigDirName))
       }
 
+      // Create cache dir if it doesn't exist
+      if (!fs.pathExistsSync(path.join(os.homedir(), defaultConfigDirName, defaultCacheDirName))) {
+        fs.mkdir(path.join(os.homedir(), defaultConfigDirName, defaultCacheDirName));
+      }
+
       // Copy defaults.yml to config dir if doesn't exist
       if (!fs.pathExistsSync(path.join(os.homedir(), defaultConfigDirName, defaultConfigFileName))) {
         fs.copyFileSync(
@@ -85,8 +91,9 @@ function init({ program, moduleConfig }) {
     }
     config = deepExtend({}, defaults, yaml.safeLoad(fs.readFileSync(process.env.SWARM_PACK_CONFIG_FILE)));
 
-    // CLI overrides last, these take precedence
+    // CLI & other overrides last, these take precedence
     configureDocker({ ...program });
+    config.cacheDir = path.join(os.homedir(), defaultConfigDirName, defaultCacheDirName);
 
   // Running as NPM module - optional config passed in
   } else if (moduleConfig) {

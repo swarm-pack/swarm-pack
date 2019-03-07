@@ -4,16 +4,34 @@ const simpleGit = require('simple-git/promise');
 const tmp = require('tmp');
 const fs = require('fs-extra');
 const yaml = require('js-yaml');
+const md5 = require('md5');
 const config = require('../config').get();
 
-// TODO - move to configuration eventually
+/**
+ * If config.cacheDir is set, clone the repo to the cache directory
+ * Otherwise we'll clone it to a temporary directory
+ *
+ * Returns a complete path to the cloned/updated dir
+ */
+async function cloneOrPullRepo({ name, url }) {
+  let localPath;
+  if (config.cacheDir) {
+    localPath = path.join( config.cacheDir, `${name}_${md5(url)}` );
+    await fs.ensureDir(localPath);
+  } else {
+    localPath = tmp.dirSync().name;
+  }
+  const git = simpleGit(localPath);
+  if ( await git.checkIsRepo() ) {
+    await git.pull();
+  } else {
+    await git.clone(url, localPath);
+  }
+  return localPath;
+}
 
 async function inspectPack(packRef) {
-  const tempDir = tmp.dirSync();
-  const repo = simpleGit(tempDir.name);
-
-  let result = {}
-
+  let result = {};
   // Check if packRef is a local dir
   if ( fs.pathExistsSync(path.resolve(packRef, 'packfile.yml')) ) {
     result = {
@@ -25,23 +43,17 @@ async function inspectPack(packRef) {
       packRef.split("/").length === 3 &&
       config.repositories.map(r => r.name).includes(packRef.split("/")[0]) 
     ) {
-
     const [ repoName, repoDir, packDir ] = packRef.split("/");
     const repoUrl = config.repositories.find(repo => repo.name === repoName).url;
+    const localDir = await cloneOrPullRepo({ name: repoName, url: repoUrl });
 
-    // TODO - checkout in ~/.swarm-pack and pull to update when needed, i.e. a repo cache
-    // N.B. need to figure out what to do when run as NPM package - probably different behaviour?
-    await repo.env({ ...process.env }).clone(repoUrl, repoName)
-
-    if (!fs.pathExistsSync(path.join(tempDir.name, repoName, repoDir, packDir, 'packfile.yml'))) {
+    if (!fs.pathExistsSync(path.join(localDir, repoDir, packDir, 'packfile.yml'))) {
       throw new Error(`Cannot find ${repoDir}/${packDir}/packfile.yml in remote repo ${repoUrl}`);
     }
-
     result = {
       type: "repository",
-      dir: path.join(tempDir.name, repoName, repoDir, packDir)
+      dir: path.join(localDir, repoDir, packDir)
     }
-
   } else { 
     throw new Error(`Couldn't resolve pack reference ${packRef}`);
   }
@@ -53,12 +65,23 @@ async function inspectPack(packRef) {
   // If possible, get last git commit for this pack
   // This works for git urls and repo. Local dirs will work as long as they are initialized as git repos
   // This is outside the control of swarm-pack
-  repo.cwd(result.dir);
-  result.commit_hash = await repo.log({ file: result.dir }).then(log => log.latest.hash).catch(() => undefined)
+  result.commit_hash = await simpleGit(result.dir).log({ file: result.dir }).then(log => log.latest.hash).catch(() => undefined)
 
   return result;
 }
 
-module.exports = {
-  inspectPack
+async function cacheUpdate() {
+  if (config.cacheDir && config.repositories && config.repositories.length) {
+    for (const repo of config.repositories) {
+      await cloneOrPullRepo(repo);
+    }
+  }
 }
+
+async function cacheClear() {
+  if (config.cacheDir) {
+    await fs.emptyDir(config.cacheDir);
+  }
+}
+
+module.exports = { inspectPack, cacheClear, cacheUpdate }

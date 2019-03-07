@@ -6,7 +6,7 @@ const deploy = require('./deploy');
 const docker = require('./utils/docker');
 const { inspectPack } = require('./repo');
 
-async function compileAndDeploy({ stack, packRef = process.cwd(), values = {} }) {
+async function compileAndDeploy({ stack, packRef, values = {} }) {
   const pack = await inspectPack(packRef);
 
   // Required files
