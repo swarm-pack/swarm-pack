@@ -4,9 +4,9 @@ const simpleGit = require('simple-git/promise');
 const tmp = require('tmp');
 const fs = require('fs-extra');
 const yaml = require('js-yaml');
+const config = require('../config').get();
 
 // TODO - move to configuration eventually
-const gitRepoUrl = "https://github.com/swarm-pack/repository/";
 
 async function inspectPack(packRef) {
   const tempDir = tmp.dirSync();
@@ -20,33 +20,28 @@ async function inspectPack(packRef) {
       type: "local",
       dir: path.resolve(packRef)
     }
-  // Check if packRef is official repo
-  } else if ( packRef.startsWith('stable/') || packRef.startsWith('incubator/') ) {
+  // Check if packRef looks like a repository configured in config.repositories
+  } else if (
+      packRef.split("/").length === 3 &&
+      config.repositories.map(r => r.name).includes(packRef.split("/")[0]) 
+    ) {
+
+    const [ repoName, repoDir, packDir ] = packRef.split("/");
+    const repoUrl = config.repositories.find(repo => repo.name === repoName).url;
+
     // TODO - checkout in ~/.swarm-pack and pull to update when needed, i.e. a repo cache
     // N.B. need to figure out what to do when run as NPM package - probably different behaviour?
-    await repo.env({ ...process.env }).clone(gitRepoUrl, 'repository')
+    await repo.env({ ...process.env }).clone(repoUrl, repoName)
 
-    if (!fs.pathExistsSync(path.join(tempDir.name, 'repository', packRef, 'packfile.yml'))) {
-      throw new Error(`Pack ${packRef} not found in official repository`);
+    if (!fs.pathExistsSync(path.join(tempDir.name, repoName, repoDir, packDir, 'packfile.yml'))) {
+      throw new Error(`Cannot find ${repoDir}/${packDir}/packfile.yml in remote repo ${repoUrl}`);
     }
 
     result = {
-      type: "official",
-      dir: path.join(tempDir.name, 'repository', packRef)
+      type: "repository",
+      dir: path.join(tempDir.name, repoName, repoDir, packDir)
     }
 
-  // Check if packRef is a git url
-  } else if ( isUrl(packRef) ) {
-    try {
-      await repo.env({ ...process.env }).clone(packRef, 'custom')
-    }catch (err) {
-      console.error(`Error cloning repository at URL ${packRef}`, err);
-      process.exit(1);
-    }
-    result = {
-      type: "git",
-      dir: path.join(tempDir.name, 'custom')
-    }
   } else { 
     throw new Error(`Couldn't resolve pack reference ${packRef}`);
   }
