@@ -4,7 +4,6 @@
   "description": "Package management for Docker Swarm",
   "main": "src/index.js",
   "dependencies": {
-    "align-yaml": "^0.1.8",
     "cli-table": "^0.3.1",
     "command-line-args": "^5.0.2",
     "commander": "^2.19.0",
