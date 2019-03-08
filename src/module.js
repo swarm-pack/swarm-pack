@@ -7,10 +7,10 @@
  * const sp = SwarmPack(config);
  */
 
-const config = require('./config');
+const _config = require('./config');
 
-module.exports = ({program, moduleConfig}) => {
-  config.init({ program, moduleConfig });
+module.exports = ({ program, config }) => {
+  _config.init({ program, moduleConfig: config });
 
   return { ...require('./index') }
 };
