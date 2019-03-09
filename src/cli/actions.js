@@ -1,7 +1,7 @@
 const Table = require('cli-table');
 const { compileAndDeploy } = require('../index');
 const queryInstalledPack = require('../query/queryInstalledPack');
-const { inspectPack } = require('../repo');
+const repo = require('../repo');
 
 function noEmptyValues(obj) {
   for (const [key, value] of Object.entries(obj)) {
@@ -33,8 +33,7 @@ function pack_ls(_, program) {
 
 async function pack_inspect_version(packRef) {
   noEmptyValues({ packRef });
-
-  const pack = await inspectPack(packRef);
+  const pack = await repo.inspectPack(packRef);
   console.log(JSON.stringify({
     version: pack.version,
     commit_hash: pack.commit_hash
@@ -43,7 +42,17 @@ async function pack_inspect_version(packRef) {
 
 async function pack_inspect(packRef) {
   noEmptyValues({ packRef });
-  console.log(JSON.stringify(await inspectPack(packRef), null, 2));
+  console.log(JSON.stringify(await repo.inspectPack(packRef), null, 2));
+}
+
+async function cache_update() {
+  await repo.cacheUpdate();
+  console.log("Cache successfully updated");
+}
+
+async function cache_clear() {
+  await repo.cacheClear();
+  console.log("Local repository cache cleared");
 }
 
 
@@ -51,5 +60,7 @@ module.exports = {
   pack_deploy,
   pack_ls,
   pack_inspect,
-  pack_inspect_version
+  pack_inspect_version,
+  cache_clear,
+  cache_update
 };

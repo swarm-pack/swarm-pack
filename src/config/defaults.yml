@@ -1,0 +1,13 @@
+# SWARM-PACK DEFAULT CONFIGURATION FILE
+
+# Docker connection configuration
+docker:
+  socketPath: "/var/run/docker.sock"
+  url: "unix:///var/run/docker.sock"
+
+# Configuration for pack repos. Official is recommended to keep.
+repositories:
+  - name: official
+    url: https://github.com/swarm-pack/repository
+
+# 
