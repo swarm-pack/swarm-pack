@@ -1,19 +1,20 @@
 const Table = require('cli-table');
 const { compileAndDeploy } = require('../index');
 const queryInstalledPack = require('../query/queryInstalledPack');
+const searchRepositories = require('../query/searchRepositories');
 const repo = require('../repo');
 
 function noEmptyValues(obj) {
   for (const [key, value] of Object.entries(obj)) {
     if (!value) {
-      console.error(`${key} missing or invalid value`)
+      console.error(`${key} missing or invalid value`);
       process.exit(1);
     }
   }
 }
 
 function pack_deploy(packRef, stack, program) {
-  noEmptyValues({packRef, stack});
+  noEmptyValues({ packRef, stack });
   compileAndDeploy({ packRef, stack });
 }
 
@@ -34,10 +35,16 @@ function pack_ls(_, program) {
 async function pack_inspect_version(packRef) {
   noEmptyValues({ packRef });
   const pack = await repo.inspectPack(packRef);
-  console.log(JSON.stringify({
-    version: pack.version,
-    commit_hash: pack.commit_hash
-  }, null, 2));
+  console.log(
+    JSON.stringify(
+      {
+        version: pack.version,
+        commit_hash: pack.commit_hash
+      },
+      null,
+      2
+    )
+  );
 }
 
 async function pack_inspect(packRef) {
@@ -47,14 +54,26 @@ async function pack_inspect(packRef) {
 
 async function cache_update() {
   await repo.cacheUpdate();
-  console.log("Cache successfully updated");
+  console.log('Cache successfully updated');
 }
 
 async function cache_clear() {
   await repo.cacheClear();
-  console.log("Local repository cache cleared");
+  console.log('Local repository cache cleared');
 }
 
+async function search_repo(keyword) {
+  const packs = await searchRepositories(keyword);
+  const table = new Table({
+    head: ['Name', 'Version', 'Pack reference', 'Description']
+  });
+
+  packs.forEach(p => {
+    table.push([p.name, p.version, p.packRef, p.description]);
+  });
+
+  console.log(table.toString());
+}
 
 module.exports = {
   pack_deploy,
@@ -62,5 +81,6 @@ module.exports = {
   pack_inspect,
   pack_inspect_version,
   cache_clear,
-  cache_update
+  cache_update,
+  search_repo
 };

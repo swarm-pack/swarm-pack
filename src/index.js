@@ -5,12 +5,15 @@ const compile = require('./compile/compile');
 const deploy = require('./deploy');
 const docker = require('./utils/docker');
 const { inspectPack } = require('./repo');
+const searchRepositories = require('./query/searchRepositories');
 
 async function compileAndDeploy({ stack, packRef, values = {} }) {
   const pack = await inspectPack(packRef);
 
   // Required files
-  const template = (await fs.readFile(path.join(pack.dir, 'docker-compose.tpl.yml'))).toString('utf8');
+  const template = (await fs.readFile(path.join(pack.dir, 'docker-compose.tpl.yml'))).toString(
+    'utf8'
+  );
 
   // Optional files
   const defaults = yaml.safeLoad(
@@ -34,5 +37,6 @@ module.exports = {
   compileAndDeploy,
   compile,
   deploy,
-  inspectPack
+  inspectPack,
+  searchRepositories
 };
