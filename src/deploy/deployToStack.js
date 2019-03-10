@@ -1,6 +1,6 @@
 const { Readable } = require('stream');
 const _ = require('lodash');
-const { pipeToDocker } = require('../utils/docker');
+const { pipeToDocker } = require('../services/docker');
 
 function deployToStack({ compose, stack }) {
   console.log('Start deploying');

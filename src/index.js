@@ -3,9 +3,8 @@ const fs = require('fs-extra');
 const path = require('path');
 const compile = require('./compile/compile');
 const deploy = require('./deploy');
-const docker = require('./utils/docker');
 const { inspectPack } = require('./repo');
-const searchRepositories = require('./query/searchRepositories');
+const { searchRepositories } = require('./query');
 
 async function compileAndDeploy({ stack, packRef, values = {} }) {
   const pack = await inspectPack(packRef);
