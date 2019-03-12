@@ -1,24 +1,24 @@
 const Table = require('cli-table');
+const lodash = require('lodash');
 const { compileAndDeploy } = require('../index');
-const queryInstalledPack = require('../query/queryInstalledPack');
-const searchRepositories = require('../query/searchRepositories');
+const { queryInstalledPack, searchRepositories } = require('../query');
 const repo = require('../repo');
 
 function noEmptyValues(obj) {
-  for (const [key, value] of Object.entries(obj)) {
+  lodash.forOwn(obj, (value, key) => {
     if (!value) {
       console.error(`${key} missing or invalid value`);
       process.exit(1);
     }
-  }
+  });
 }
 
-function pack_deploy(packRef, stack, program) {
+function pack_deploy(packRef, stack) {
   noEmptyValues({ packRef, stack });
   compileAndDeploy({ packRef, stack });
 }
 
-function pack_ls(_, program) {
+function pack_ls() {
   queryInstalledPack().then(packs => {
     const table = new Table({
       head: ['Name', 'Version']

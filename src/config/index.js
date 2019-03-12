@@ -1,11 +1,11 @@
-const Docker = require('dockerode');
 const path = require('path');
 const fs = require('fs-extra');
 const yaml = require('js-yaml');
 const deepExtend = require('deep-extend');
 const os = require('os');
+const getEnv = require('getenv');
+const { ensurePathExisted, isFileEmpty } = require('../utils');
 
-let defaults = {};
 let config = {};
 let initialized = false;
 
@@ -32,6 +32,13 @@ function configureDocker({ socketPath = false, host = false, port = '2375' }) {
   }
 }
 
+function setConfigEnv() {
+  config.defaultLoc = path.join(os.homedir(), defaultConfigDirName);
+  config.configLoc =
+    getEnv('SWARM_PACK_CONFIG_FILE', '') || path.join(config.defaultLoc, defaultConfigFileName);
+  config.cacheDir = path.join(config.defaultLoc, defaultCacheDirName);
+}
+
 /*
 Call include config and call init() when ENV vars and config files are ready
 
@@ -55,56 +62,33 @@ When swarm-pack called from javascript interface (e.g. as npm dependency)
 */
 function init({ program, moduleConfig }) {
   // Load defaults
-  defaults = yaml.safeLoad(fs.readFileSync(path.resolve(__dirname, './defaults.yml')));
+  const defaults = yaml.safeLoad(fs.readFileSync(path.resolve(__dirname, './defaults.yml')));
 
   // Running from CLI
   if (program) {
-    // Initialize .swarm-pack in home dir if needed
-    if (!process.env.SWARM_PACK_CONFIG_FILE) {
-      // Create .swarm-pack in home dir if it doesn't exist
-      if (!fs.pathExistsSync(path.join(os.homedir(), defaultConfigDirName))) {
-        fs.mkdir(path.join(os.homedir(), defaultConfigDirName));
-      }
+    setConfigEnv();
 
-      // Create cache dir if it doesn't exist
-      if (!fs.pathExistsSync(path.join(os.homedir(), defaultConfigDirName, defaultCacheDirName))) {
-        fs.mkdir(path.join(os.homedir(), defaultConfigDirName, defaultCacheDirName));
-      }
+    // Initialize swarm-pack config
+    ensurePathExisted(config.cacheDir, true);
+    // Create cache dir if it doesn't exist
+    ensurePathExisted(config.configLoc);
 
-      // Copy defaults.yml to config dir if doesn't exist
-      if (
-        !fs.pathExistsSync(path.join(os.homedir(), defaultConfigDirName, defaultConfigFileName))
-      ) {
-        fs.copyFileSync(
-          path.join(__dirname, 'defaults.yml'),
-          path.join(os.homedir(), defaultConfigDirName, defaultConfigFileName)
-        );
-      }
-
-      process.env.SWARM_PACK_CONFIG_FILE = path.join(
-        os.homedir(),
-        defaultConfigDirName,
-        defaultConfigFileName
-      );
+    // Copy defaults.yml to config dir if doesn't exist
+    if (isFileEmpty(config.configLoc)) {
+      fs.copyFileSync(path.join(__dirname, 'defaults.yml'), config.configLoc);
     }
 
-    const configFile = process.env.SWARM_PACK_CONFIG_FILE;
-    if (!fs.pathExistsSync(process.env.SWARM_PACK_CONFIG_FILE)) {
-      throw new Error(`Could not find config file specified by SWARM_PACK_CONFIG_FILE`);
-    }
-    config = deepExtend(
-      {},
-      defaults,
-      yaml.safeLoad(fs.readFileSync(process.env.SWARM_PACK_CONFIG_FILE))
-    );
+    config = deepExtend({}, config, defaults, yaml.safeLoad(fs.readFileSync(config.configLoc)));
 
     // CLI & other overrides last, these take precedence
     configureDocker({ ...program });
-    config.cacheDir = path.join(os.homedir(), defaultConfigDirName, defaultCacheDirName);
+
+    // Persist config
+    fs.writeFileSync(config.configLoc, yaml.safeDump(config));
 
     // Running as NPM module - optional config passed in
   } else if (moduleConfig) {
-    config = deepExtend({}, defaults, moduleConfig);
+    config = deepExtend({}, config, defaults, moduleConfig);
   }
 
   initialized = true;

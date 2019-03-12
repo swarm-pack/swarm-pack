@@ -1,8 +1,6 @@
-const fs = require('fs');
 const glob = require('glob');
 const sanitize = require('sanitize-filename');
 const yaml = require('js-yaml');
-const { pipeToDocker } = require('../utils/docker');
 const { cacheUpdate } = require('../repo');
 const config = require('../config').get();
 const { readFile } = require('../utils');

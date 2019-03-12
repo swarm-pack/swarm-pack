@@ -12,6 +12,7 @@
     "docker-service-api": "^17.12.19",
     "dockerode": "^2.5.8",
     "fs-extra": "^7.0.1",
+    "getenv": "^0.7.0",
     "glob": "^7.1.3",
     "is-url": "^1.2.4",
     "js-yaml": "^3.12.1",
@@ -39,13 +40,16 @@
     "eslint-plugin-jsx-a11y": "^6.2.1",
     "eslint-plugin-prettier": "^3.0.1",
     "eslint-plugin-react": "^7.12.4",
+    "husky": "^1.3.1",
+    "lint-staged": "^8.1.5",
     "prettier": "^1.16.4",
     "rimraf": "^2.6.3"
   },
   "scripts": {
     "start": "node src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "package": "pkg src/cli/pack.js --out-path ./build"
+    "package": "pkg src/cli/pack.js --out-path ./build",
+    "pretty": "prettier \"src/**/*.{json,md,scss,yaml,yml}\""
   },
   "repository": {
     "type": "git",
@@ -54,7 +58,22 @@
   "bin": {
     "swarm-pack": "./src/cli/pack.js"
   },
-  "author": "",
+  "lint-staged": {
+    "src/**/*.{js,jsx}": [
+      "eslint --fix",
+      "git add"
+    ],
+    "src/**/*.{json,md,scss,yaml,yml}": [
+      "prettier --write",
+      "git add"
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "author": "Swarm Pack",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/swarm-pack/swarm-pack/issues"

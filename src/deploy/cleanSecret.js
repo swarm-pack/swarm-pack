@@ -1,4 +1,4 @@
-const docker = require('../utils/docker');
+const docker = require('../services/docker');
 
 async function removeSecret({ ID }) {
   return docker
