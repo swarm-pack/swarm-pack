@@ -140,7 +140,6 @@ async function list() {
 
 async function cacheClear() {
   if (config.cacheDir) {
-    console.log(config.cacheDir);
     await fs.emptyDir(config.cacheDir);
   }
 }
