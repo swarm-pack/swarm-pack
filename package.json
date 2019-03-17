@@ -1,6 +1,6 @@
 {
   "name": "swarm-pack",
-  "version": "1.0.0",
+  "version": "1.1.1",
   "description": "Package management for Docker Swarm",
   "main": "src/module.js",
   "dependencies": {

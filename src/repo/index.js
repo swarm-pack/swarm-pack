@@ -55,7 +55,9 @@ async function inspectPack(packRef) {
     const localDir = await cloneOrPullRepo({ name: repoName, url: repoUrl });
 
     if (!fs.pathExistsSync(path.join(localDir, repoDir, packDir, 'packfile.yml'))) {
-      throw new Error(`Cannot find ${repoDir}/${packDir}/packfile.yml in remote repo ${repoUrl}`);
+      throw new Error(
+        `Cannot find ${repoDir}/${packDir}/packfile.yml in remote repo ${repoUrl}`
+      );
     }
     result = {
       type: 'repository',
@@ -66,7 +68,9 @@ async function inspectPack(packRef) {
   }
 
   // Get version from packfile
-  result.packFile = yaml.safeLoad(await fs.readFile(path.resolve(result.dir, 'packfile.yml')));
+  result.packFile = yaml.safeLoad(
+    await fs.readFile(path.resolve(result.dir, 'packfile.yml'))
+  );
   result.version = result.packFile.pack.version;
 
   // If possible, get last git commit for this pack
@@ -90,10 +94,54 @@ async function cacheUpdate() {
   }
 }
 
+async function validateRepo({ name, url }) {
+  if (!name || !url) {
+    throw new Error('Repository name or url are either missing or invalid');
+  }
+
+  if (config.repositories.find(r => r.name === name || r.url === url)) {
+    throw new Error('Repository name or url already existed in config');
+  }
+
+  await cloneOrPullRepo({ name, url });
+}
+
+async function add({ name, url }) {
+  await validateRepo({ name, url });
+  config.repositories.push({ name, url });
+  config.persist();
+}
+
+async function remove(repo) {
+  const removeRepo = config.repositories.find(r => r.name === repo || r.url === repo);
+
+  if (
+    removeRepo.name === 'official' ||
+    removeRepo.url === 'https://github.com/swarm-pack/repository'
+  ) {
+    throw new Error('Cannot remove official default repository');
+  }
+
+  if (!removeRepo) {
+    return;
+  }
+
+  await fs.removeSync(await cacheResolver(removeRepo));
+  config.repositories = [
+    ...config.repositories.filter(r => r.name !== repo && r.url !== repo)
+  ];
+
+  config.persist();
+}
+
+async function list() {
+  return config.repositories;
+}
+
 async function cacheClear() {
   if (config.cacheDir) {
     await fs.emptyDir(config.cacheDir);
   }
 }
 
-module.exports = { inspectPack, cacheClear, cacheUpdate };
+module.exports = { inspectPack, cacheClear, cacheUpdate, add, remove, list };

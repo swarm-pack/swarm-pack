@@ -52,17 +52,20 @@ async function pack_inspect(packRef) {
   console.log(JSON.stringify(await repo.inspectPack(packRef), null, 2));
 }
 
-async function cache_update() {
+async function cache_update(cmd) {
+  if (cmd !== 'update') return;
+
   await repo.cacheUpdate();
   console.log('Cache successfully updated');
 }
 
-async function cache_clear() {
+async function cache_clear(cmd) {
+  if (cmd !== 'clear') return;
   await repo.cacheClear();
   console.log('Local repository cache cleared');
 }
 
-async function search_repo(keyword) {
+async function repo_search(keyword) {
   const packs = await searchRepositories(keyword);
   const table = new Table({
     head: ['Name', 'Version', 'Pack reference', 'Description']
@@ -75,6 +78,51 @@ async function search_repo(keyword) {
   console.log(table.toString());
 }
 
+async function repo_add(cmd, name, url) {
+  if (cmd !== 'add') return;
+
+  try {
+    if (typeof name !== 'string' || typeof url !== 'string') {
+      throw new Error('Repository name or url are either missing or invalid');
+    }
+
+    await repo.add({ name, url });
+    console.log(`Added repository ${name}`);
+  } catch (err) {
+    console.log(err.message);
+  }
+}
+
+async function repo_remove(cmd, name) {
+  if (cmd !== 'rm') return;
+
+  try {
+    if (typeof name !== 'string') {
+      throw new Error('Repository name/url is either missing or invalid');
+    }
+
+    await repo.remove(name);
+    console.log(`Removed repository ${name}`);
+  } catch (err) {
+    console.log(err.message);
+  }
+}
+
+async function repo_list(cmd) {
+  if (cmd !== 'ls') return;
+
+  const repos = await repo.list();
+  const table = new Table({
+    head: ['Name', 'Url']
+  });
+
+  repos.forEach(p => {
+    table.push([p.name, p.url]);
+  });
+
+  console.log(table.toString());
+}
+
 module.exports = {
   pack_deploy,
   pack_ls,
@@ -82,5 +130,8 @@ module.exports = {
   pack_inspect_version,
   cache_clear,
   cache_update,
-  search_repo
+  repo_search,
+  repo_add,
+  repo_remove,
+  repo_list
 };

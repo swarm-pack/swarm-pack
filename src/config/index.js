@@ -35,8 +35,15 @@ function configureDocker({ socketPath = false, host = false, port = '2375' }) {
 function setConfigEnv() {
   config.defaultLoc = path.join(os.homedir(), defaultConfigDirName);
   config.configLoc =
-    getEnv('SWARM_PACK_CONFIG_FILE', '') || path.join(config.defaultLoc, defaultConfigFileName);
+    getEnv('SWARM_PACK_CONFIG_FILE', '') ||
+    path.join(config.defaultLoc, defaultConfigFileName);
   config.cacheDir = path.join(config.defaultLoc, defaultCacheDirName);
+}
+
+function persist() {
+  const store = deepExtend({}, config);
+  delete store.persist;
+  fs.writeFileSync(config.configLoc, yaml.safeDump(store));
 }
 
 /*
@@ -62,7 +69,9 @@ When swarm-pack called from javascript interface (e.g. as npm dependency)
 */
 function init({ program, moduleConfig }) {
   // Load defaults
-  const defaults = yaml.safeLoad(fs.readFileSync(path.resolve(__dirname, './defaults.yml')));
+  const defaults = yaml.safeLoad(
+    fs.readFileSync(path.resolve(__dirname, './defaults.yml'))
+  );
 
   // Running from CLI
   if (program) {
@@ -78,13 +87,18 @@ function init({ program, moduleConfig }) {
       fs.copyFileSync(path.join(__dirname, 'defaults.yml'), config.configLoc);
     }
 
-    config = deepExtend({}, config, defaults, yaml.safeLoad(fs.readFileSync(config.configLoc)));
+    config = deepExtend(
+      {},
+      config,
+      defaults,
+      yaml.safeLoad(fs.readFileSync(config.configLoc))
+    );
 
     // CLI & other overrides last, these take precedence
     configureDocker({ ...program });
 
     // Persist config
-    fs.writeFileSync(config.configLoc, yaml.safeDump(config));
+    persist();
 
     // Running as NPM module - optional config passed in
   } else if (moduleConfig) {
@@ -98,10 +112,14 @@ function get() {
   if (!initialized) {
     throw new Error('Config must be initialized first!');
   }
+  if (!config.persist) {
+    config.persist = persist;
+  }
   return config;
 }
 
 module.exports = {
   init,
-  get
+  get,
+  persist
 };

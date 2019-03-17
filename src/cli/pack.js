@@ -38,12 +38,11 @@ program
 
 program
   .command('inspect <pack>')
-  .description('Inpsect various details of a pack. Can be repo pack, local directory or git URL.')
+  .description(
+    'Inpsect various details of a pack. Can be repo pack, local directory or git URL.'
+  )
   .action(require('./actions').pack_inspect);
 
-// Waiting for multi-word commands
-// So we can do `swarm-pack cache update` etc
-// https://github.com/tj/commander.js/issues/655
 program
   .command('cache <action>')
   .description(
@@ -51,15 +50,30 @@ program
 clear - clear the local cache
 update - fetch or update the local repo cache`
   )
-  .action(action => {
-    if (action === 'clear') require('./actions').cache_clear();
-    if (action === 'update') require('./actions').cache_update();
-  });
+  .option('')
+  .option('clear', 'Clear the local cache')
+  .action(require('./actions').cache_clear)
+  .option('')
+  .option('update', 'Fetch or update the local repository cache')
+  .action(require('./actions').cache_update);
 
 program
   .command('search <keyword>')
   .description('Search the repository for pack by name')
-  .action(require('./actions').search_repo);
+  .action(require('./actions').repo_search);
+
+program
+  .command('repo')
+  .description('Manage repo')
+  .option('')
+  .option('ls', 'List repository')
+  .action(require('./actions').repo_list)
+  .option('')
+  .option('add <name> <url>', 'Add repository')
+  .action(require('./actions').repo_add)
+  .option('')
+  .option('rm <nameOrUrl>', 'Remove repository')
+  .action(require('./actions').repo_remove);
 
 // Parse to run action
 program.parse(process.argv);
