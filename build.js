@@ -8,7 +8,7 @@ const bundleDir = path.join(__dirname, 'build/Release');
 const nodeVersion = "10.15.3"; // Latest nexe pre-built available
 const targets = [ "mac-x64", "alpine-x64", "windows-x64", "linux-x64" ];
 
-const version = process.env.CIRCLE_CI_VERSION || 'dev';
+const version = process.env.CIRCLE_TAG || 'dev';
 
 console.log(`Clearing ${bundleDir}...\n`);
 fs.ensureDirSync(bundleDir);

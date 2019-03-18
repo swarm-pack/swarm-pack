@@ -7,9 +7,6 @@ jobs:
       - image: node:10.15.3
     steps:
       - checkout
-      - run:
-          name: Debugging
-          command: pwd && echo "\n\n" && ls -la
       - restore_cache:
           key: dependency-cache-{{ checksum "package.json" }}
       - restore_cache:
@@ -24,6 +21,10 @@ jobs:
       - run:
           name: Build target binaries
           command: npm run build
+      - save_cache:
+          key: nexe-cache-{{ checksum "build.js" }}
+          paths:
+            - ~/.nexe/
       - persist_to_workspace:
           root: ~/swarm-pack
           paths:
