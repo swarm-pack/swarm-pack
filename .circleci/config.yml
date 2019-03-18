@@ -7,6 +7,8 @@ jobs:
       - image: node:10.15.3
     steps:
       - checkout
+      - run:
+        command: pwd && echo "\n\n" && ls -la
       - restore_cache:
           key: dependency-cache-{{ checksum "package.json" }}
       - restore_cache:
@@ -22,6 +24,7 @@ jobs:
           name: Build target binaries
           command: npm run build
       - persist_to_workspace:
+          root: ~/swarm-pack
           paths:
             - build/Release
 
@@ -31,7 +34,7 @@ jobs:
       - image: circleci/golang:1.8
     steps:
       - attach_workspace:
-          at: ./build/Release
+          at: ~/swarm-pack
       - run:
           name: "Publish Release on GitHub"
           command: |
