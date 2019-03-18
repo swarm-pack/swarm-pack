@@ -1,0 +1,52 @@
+version: 2
+jobs:
+  build:
+    working_directory: ~/swarm-pack
+    # The primary container is an instance of the first image listed. The job's commands run in this container.
+    docker:
+      - image: node:10.15.3
+    steps:
+      - checkout
+      - restore_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+      - restore_cache:
+          key: nexe-cache-{{ checksum "build.js" }}
+      - run:
+          name: Install npm packages
+          command: npm install
+      - save_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+          paths:
+            - node_modules
+      - run:
+          name: Build target binaries
+          command: npm run build
+      - persist_to_workspace:
+          paths:
+            - build/Release
+
+  release:
+    working_directory: ~/swarm-pack
+    docker:
+      - image: circleci/golang:1.8
+    steps:
+      - attach_workspace:
+          at: ./build/Release
+      - run:
+          name: "Publish Release on GitHub"
+          command: |
+            go get github.com/tcnksm/ghr
+            VERSION=CIRCLE
+            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ./artifacts/
+
+workflows:
+  version: 2
+  build_and_release:
+    jobs:
+      - build
+      - release:
+          requires:
+            - build
+          filters:
+            tags:
+              only: /^v[0-9]+(\.[0-9]+)*$/
