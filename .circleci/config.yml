@@ -51,7 +51,8 @@ workflows:
       - build
           filters:
             tags:
-              only: /^v[0-9]+(\.[0-9]+)*$/
+              only: /^v.*/
+              #only: /^v[0-9]+(\.[0-9]+)*$/
       - release:
           requires:
             - build
@@ -59,4 +60,5 @@ workflows:
             branches:
               ignore: /.*/
             tags:
-              only: /^v[0-9]+(\.[0-9]+)*$/
+              only: /^v.*/
+              # only: /^v[0-9]+(\.[0-9]+)*$/
