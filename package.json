@@ -18,6 +18,7 @@
     "js-yaml": "^3.12.1",
     "lodash": "^4.17.11",
     "md5": "^2.2.1",
+    "nexe": "^3.0.0-beta.15",
     "nunjucks": "^3.1.7",
     "pkg": "^4.3.7",
     "sanitize-filename": "^1.6.1",
@@ -49,7 +50,8 @@
     "start": "node src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "package": "pkg src/cli/pack.js --out-path ./build",
-    "pretty": "prettier \"src/**/*.{json,md,scss,yaml,yml}\""
+    "pretty": "prettier \"src/**/*.{json,md,scss,yaml,yml}\"",
+    "build": "node build.js"
   },
   "repository": {
     "type": "git",

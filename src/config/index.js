@@ -5,6 +5,7 @@ const deepExtend = require('deep-extend');
 const os = require('os');
 const getEnv = require('getenv');
 const { ensurePathExisted, isFileEmpty } = require('../utils');
+const defaults_yaml = require('./defaults.yml');
 
 let config = {};
 let initialized = false;
@@ -69,9 +70,7 @@ When swarm-pack called from javascript interface (e.g. as npm dependency)
 */
 function init({ program, moduleConfig }) {
   // Load defaults
-  const defaults = yaml.safeLoad(
-    fs.readFileSync(path.resolve(__dirname, './defaults.yml'))
-  );
+  const defaults = yaml.safeLoad(defaults_yaml);
 
   // Running from CLI
   if (program) {
@@ -84,7 +83,7 @@ function init({ program, moduleConfig }) {
 
     // Copy defaults.yml to config dir if doesn't exist
     if (isFileEmpty(config.configLoc)) {
-      fs.copyFileSync(path.join(__dirname, 'defaults.yml'), config.configLoc);
+      fs.outputFileSync(defaults_yaml, config.configLoc);
     }
 
     config = deepExtend(
