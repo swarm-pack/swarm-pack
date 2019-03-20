@@ -10,6 +10,11 @@ const packTemplate = `---
 pack:
   name: <<pack_name>>
   version: 0.0.1
+  home: <<pack_home>>
+  description: <<pack_description>>
+  keywords: []
+  sources: []
+  maintainers: []
 `;
 
 const defaultsTemplate = `---
@@ -46,6 +51,9 @@ services:
 `;
 
 function generatePack(answers) {
+  // Since we are generating a nunjucks template
+  // with a template...
+  // we need a different syntax for the outer template
   nunjucks.configure({
     autoescape: false,
     tags: {
@@ -79,9 +87,9 @@ function generatePack(answers) {
   );
 
   console.log(`
-    Created a new pack at ${packDir}!
+    Success! Created a new pack at ${packDir}
     We've included some example configurations for you to configure or remove as needed.
-    Good luck developing your new pack!
+    Good luck developing your new pack.
   `);
 }
 

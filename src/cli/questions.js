@@ -13,6 +13,18 @@ const create = [
 
   {
     type: 'input',
+    name: 'pack_description',
+    message: 'Short description of this pack:'
+  },
+
+  {
+    type: 'input',
+    name: 'pack_home',
+    message: 'Url for pack home, e.g. github url:'
+  },
+
+  {
+    type: 'input',
     name: 'image_repo',
     message: 'Docker image for this pack, e.g. myorg/myapp',
     validate(value) {
