@@ -19,12 +19,64 @@ You can also create your own repos for Swarm Packs and configure Swarm Pack to u
 ### Deploy
 
 ```
-swarm-pack deploy <repo> <stack>
+swarm-pack deploy <pack> <stack>
 ```
 
-**repo** - either a local path for a local pack dir, e.g. `./my_pack` or a repo reference (the repo must be defined in config) e.g. `official/incubator/portainer`.
+`pack` - either a local path for a local pack dir, e.g. `./my_pack` or a repo reference (the repo must be defined in config) e.g. `official/incubator/portainer`.
 
-**stack** - this is the Docker Stack namespace on the Swarm which will be used for the deployment.
+`stack` - this is the Docker Stack namespace on the Swarm which will be used for the deployment.
+
+### List deployed Packs
+
+```
+swarm-pack ls
+```
+
+### Inspect a Pack in the repository
+
+```
+swarm-pack inspect <pack>
+```
+
+`pack` - either a local path for a local pack dir, e.g. `./my_pack` or a repo reference (the repo must be defined in config) e.g. `official/incubator/portainer`.
+
+### Manage the local repo cache
+
+Update the local repo cache
+
+```
+swarm-pack cache update
+```
+
+Clear the cache
+```
+swarm-pack cache clear
+```
+
+### Search for Packs in repos
+
+```
+swarm-pack search <keyword>
+```
+
+### Manage configured Pack repositories
+
+Pack repos are repo git URLS, e.g. [official repo](https://github.com/swarm-pack/repository)
+
+List repos in use:
+```
+swarm-pack repo ls
+```
+
+Add a remote repo:
+```
+swarm-pack repo add <name> <url>
+```
+
+Remove a configured repo:
+```
+swarm-pack repo rm <name> || <url>
+```
 
 ## NPM usage
 
