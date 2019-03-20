@@ -29,6 +29,26 @@ const create = [
     validate(value) {
       return value.match(/^[a-z0-9-_/@]*/i) ? true : 'Tag contains invalid characters';
     }
+  },
+
+  {
+    type: 'confirm',
+    name: 'use_sync',
+    message: 'Include Swarm-Sync configuration in this Pack?'
+  },
+
+  {
+    type: 'input',
+    name: 'tag_pattern',
+    message: 'Swarm-sync tag pattern, e.g. semver:^1.1.1',
+    when: answers => answers.use_sync
+  },
+
+  {
+    type: 'number',
+    name: 'default_port',
+    message: 'Default port to expose (or none)',
+    default: false
   }
 ];
 

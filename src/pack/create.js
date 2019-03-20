@@ -20,6 +20,11 @@ image:
 <<% if use_sync %>>
   tag_pattern: <<tag_pattern>>
 <<% endif %>>
+
+<<% if default_port %>>
+  ports:
+    - <<default_port>>
+<<% endif %>>
 `;
 
 const composeTemplate = `---
@@ -28,6 +33,16 @@ version: '3.6'
 services:
   {{ service_name }}:
     image: {{ image.repository }}:{{ image.tag }}
+
+<<% if default_port %>>
+  #Ports
+{% for port in ports %}
+{% if loop.first %}
+    ports:
+{% endif %}
+      - {{ port }}
+{% endfor %}
+<<% endif %>>
 `;
 
 function generatePack(answers) {
@@ -62,6 +77,12 @@ function generatePack(answers) {
     path.join(packDir, composeFileName),
     nunjucks.renderString(composeTemplate, answers)
   );
+
+  console.log(`
+    Created a new pack at ${packDir}!
+    We've included some example configurations for you to configure or remove as needed.
+    Good luck developing your new pack!
+  `);
 }
 
 module.exports = {
