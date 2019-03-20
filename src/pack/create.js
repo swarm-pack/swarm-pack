@@ -10,7 +10,7 @@ const packTemplate = `---
 pack:
   name: <<pack_name>>
   version: 0.0.1
-  home: <<pack_home>>
+  home: # URL for Pack homepage, e.g. github URL
   description: <<pack_description>>
   keywords: []
   sources: []
@@ -22,14 +22,30 @@ service_name: <<pack_name>>
 image:
   repository: <<image_repo>>
   tag: <<image_tag>>
-<<% if use_sync %>>
+<<%- if use_sync %>>
   tag_pattern: <<tag_pattern>>
 <<% endif %>>
 
-<<% if default_port %>>
+<<%- if default_port %>>
   ports:
     - <<default_port>>
+<<%- endif %>>
+
+  deploy:
+    mode: replicated
+    replicas: 1
+    placement_constraints: []
+<<%- if use_sync %>>
+  swarm-sync:
+    managed: true
 <<% endif %>>
+
+<<%- if use_traefik %>>
+  traefik:
+    port: <<traefik_port>>
+    hostname: <<traefik_host>>
+    stickiness: True
+<<%- endif %>>
 `;
 
 const composeTemplate = `---
@@ -39,8 +55,8 @@ services:
   {{ service_name }}:
     image: {{ image.repository }}:{{ image.tag }}
 
-<<% if default_port %>>
-  #Ports
+<<%- if default_port %>>
+    #Ports
 {% for port in ports %}
 {% if loop.first %}
     ports:
@@ -48,6 +64,36 @@ services:
       - {{ port }}
 {% endfor %}
 <<% endif %>>
+
+    deploy:
+      mode: {{ deploy.mode }}
+      replicas: {{ deploy.replicas }}
+
+      # Placement constraints
+{% if deploy.placement_constraints | length %}
+      placement:
+        constraints:
+{% for p in deploy.placement_constraints %}
+          - "{{ p }}"
+{% endfor %}
+{% endif %}
+
+      labels:
+        - "swarm-pack.managed=true"
+<<%- if use_sync %>>
+{% if swarm-sync.managed %}
+        - "swarm-sync.managed=true"
+{% endif %}
+{% if image.tag_pattern %}
+        - "swarm-sync.image-pattern={{ image.tag_pattern }}"
+{% endif %}
+<<% endif %>>
+<<%- if use_traefik %>>
+        - "traefik.port=traefik.port"
+        - "traefik.frontend.rule=Host:{{ traefik.hostname }}"
+        - "traefik.backend.loadbalancer.stickiness={{ traefik.stickiness }}"
+<<% endif %>>
+
 `;
 
 function generatePack(answers) {

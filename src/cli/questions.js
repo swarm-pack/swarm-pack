@@ -19,12 +19,6 @@ const create = [
 
   {
     type: 'input',
-    name: 'pack_home',
-    message: 'Url for pack home, e.g. github url:'
-  },
-
-  {
-    type: 'input',
     name: 'image_repo',
     message: 'Docker image for this pack, e.g. myorg/myapp',
     validate(value) {
@@ -61,6 +55,25 @@ const create = [
     name: 'default_port',
     message: 'Default port to expose (or none)',
     default: false
+  },
+
+  {
+    type: 'confim',
+    name: 'use_traefik',
+    message: 'Does this Pack expose routes (via Traefik)?'
+  },
+  {
+    type: 'number',
+    name: 'traefik_port',
+    message: 'Which port will traefik route to?',
+    when: answers => answers.use_traefik
+  },
+
+  {
+    type: 'input',
+    name: 'traefik_host',
+    message: 'Which host will traefik expose on?',
+    when: answers => answers.use_traefik
   }
 ];
 
