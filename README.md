@@ -8,7 +8,17 @@ Swarm Pack lets you package Docker Swarm services with common patterns, templati
 
 The best way to learn is by example, so take a look at the [official repo](https://github.com/swarm-pack/repository) first.
 
-## Repository
+## Installation
+
+For now, pre-compiled binaries for Mac, Linux & Windows are published into [releases](https://github.com/swarm-pack/swarm-pack/releases).
+
+You can copy this into your environment and make it executable and run on the CLI.
+
+Alternatively, if you have nodejs 10+, checkout the code run `npm i` and then `npm link` should create a link to swarm-pack in your PATH which will be executed with nodejs.
+
+Installation improvements are planned for the future.
+
+## Repositories
 
 There is an official Pack repository here: https://github.com/swarm-pack/repository
 
