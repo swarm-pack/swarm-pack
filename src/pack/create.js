@@ -31,20 +31,20 @@ image:
     - <<default_port>>
 <<%- endif %>>
 
-  deploy:
-    mode: replicated
-    replicas: 1
-    placement_constraints: []
+deploy:
+  mode: replicated
+  replicas: 1
+  placement_constraints: []
 <<%- if use_sync %>>
-  swarm-sync:
-    managed: true
+swarm-sync:
+  managed: true
 <<% endif %>>
 
 <<%- if use_traefik %>>
-  traefik:
-    port: <<traefik_port>>
-    hostname: <<traefik_host>>
-    stickiness: True
+traefik:
+  port: <<traefik_port>>
+  hostname: <<traefik_host>>
+  stickiness: True
 <<%- endif %>>
 `;
 
