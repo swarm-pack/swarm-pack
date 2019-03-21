@@ -58,7 +58,7 @@ const create = [
   },
 
   {
-    type: 'confim',
+    type: 'confirm',
     name: 'use_traefik',
     message: 'Does this Pack expose routes (via Traefik)?'
   },
