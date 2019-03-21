@@ -5,7 +5,6 @@ const compile = require('./compile/compile');
 const deploy = require('./deploy');
 const { inspectPack } = require('./repo');
 const { searchRepositories } = require('./query');
-const defaults_yaml = require('./config/defaults.yml.js');
 
 async function compileAndDeploy({ stack, packRef, values = {} }) {
   const pack = await inspectPack(packRef);
@@ -16,7 +15,16 @@ async function compileAndDeploy({ stack, packRef, values = {} }) {
   )).toString('utf8');
 
   // Optional files
-  const defaults = yaml.safeLoad(defaults_yaml);
+  const defaultsStr = await fs.readFile(path.join(pack.dir, 'defaults.yml')).catch(() => '');
+  let defaults;
+  try {
+    defaults = yaml.safeLoad(defaultsStr);
+  } catch (error) {
+    console.log("Error parsing defaults.yml");
+    console.log(error.reason);
+    console.log(defaultsStr);
+    process.exit(1);
+  }
 
   const newValues = Object.assign({}, defaults, values);
 

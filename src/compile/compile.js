@@ -24,7 +24,16 @@ function compile({ template, values, manifests, stack }) {
   env.addGlobal('secret_from_value', key => secretFromValue(key));
 
   const interpolatedTpl = nunjucks.renderString(template, values);
-  const parsed = yaml.safeLoad(interpolatedTpl);
+
+  let parsed;
+  try {
+    parsed = yaml.safeLoad(interpolatedTpl);
+  } catch(error) {
+    console.log("Error parsing compiled docker-compose.yml");
+    console.log(error.reason);
+    console.log(interpolatedTpl);
+    process.exit(1);
+  }
 
   // Generate global secrets for any service secrets we processed (e.g. with secret_from_value)
   if (secrets.length > 0) {
