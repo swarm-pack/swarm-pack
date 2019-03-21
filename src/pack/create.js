@@ -10,7 +10,7 @@ const packTemplate = `---
 pack:
   name: <<pack_name>>
   version: 0.0.1
-  home: # URL for Pack homepage, e.g. github URL
+  #home: URL for Pack homepage, e.g. github URL
   description: <<pack_description>>
   keywords: []
   sources: []
