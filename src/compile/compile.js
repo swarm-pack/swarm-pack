@@ -4,8 +4,8 @@ const md5 = require('md5');
 const nunjucks = require('nunjucks');
 const utils = require('../utils');
 
-function compile({ template, values, manifests, stack }) {
-  const env = nunjucks.configure({ autoescape: false });
+function compile({ template, values, manifests, stack, packDir }) {
+  const env = nunjucks.configure(packDir, { autoescape: false });
 
   const secrets = [];
 
@@ -28,8 +28,8 @@ function compile({ template, values, manifests, stack }) {
   let parsed;
   try {
     parsed = yaml.safeLoad(interpolatedTpl);
-  } catch(error) {
-    console.log("Error parsing compiled docker-compose.yml");
+  } catch (error) {
+    console.log('Error parsing compiled docker-compose.yml');
     console.log(error.reason);
     console.log(interpolatedTpl);
     process.exit(1);
@@ -38,8 +38,9 @@ function compile({ template, values, manifests, stack }) {
   // Generate global secrets for any service secrets we processed (e.g. with secret_from_value)
   if (secrets.length > 0) {
     parsed.secrets = secrets.reduce((obj, secret) => {
-      obj[secret.name] = { external: true };
-      return obj;
+      const result = { ...obj };
+      result[secret.name] = { external: true };
+      return result;
     }, parsed.secrets || {});
   }
 
