@@ -2,6 +2,9 @@ const docker = require('../services/docker');
 
 async function createSecret({ secret, manifests, stack }) {
   const client = docker.getDockerodeClient();
+  const data = secret.base64
+    ? secret.value
+    : Buffer.from(secret.value, 'utf8').toString('base64');
 
   try {
     await client.createSecret({
@@ -10,7 +13,7 @@ async function createSecret({ secret, manifests, stack }) {
         'pack.manifest.name': manifests.name,
         'com.docker.stack.namespace': stack
       },
-      Data: Buffer.from(secret.value, 'utf8').toString('base64')
+      Data: data
     });
     console.log(`Created secret ${secret.name}`);
   } catch (error) {

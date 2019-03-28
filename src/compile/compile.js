@@ -13,15 +13,19 @@ function compile({ template, values, manifests, stack, packDir }) {
     return name.substring(0, 8).replace(/ /g, '_');
   }
 
-  function secretFromValue(key) {
+  /**
+   * opts - set extra options on secret
+   *   base64: true - means this value is already base64 encoded, no need to double encode it later
+   */
+  function secretFromValue(key, opts) {
     const value = utils.getObjectProperty(key, values);
     // Max length for name is 64 chars
     const name = `${sanitizeName(key.substr(0, 31))}_${md5(value)}`;
-    secrets.push({ value, name });
+    secrets.push({ value, name, ...opts });
     return name;
   }
 
-  env.addGlobal('secret_from_value', key => secretFromValue(key));
+  env.addGlobal('secret_from_value', secretFromValue);
 
   const interpolatedTpl = nunjucks.renderString(template, values);
 
