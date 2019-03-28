@@ -1,5 +1,9 @@
+const yaml = require('js-yaml');
+const fs = require('fs-extra');
+const path = require('path');
 const Table = require('cli-table');
 const lodash = require('lodash');
+const deepExtend = require('deep-extend');
 const { compileAndDeploy } = require('../index');
 const { queryInstalledPack, searchRepositories } = require('../query');
 const repo = require('../repo');
@@ -13,9 +17,21 @@ function noEmptyValues(obj) {
   });
 }
 
-function pack_deploy(packRef, stack) {
+function pack_deploy(packRef, stack, cmd) {
   noEmptyValues({ packRef, stack });
-  compileAndDeploy({ packRef, stack });
+
+  let values = {};
+
+  if (cmd.valuesFile) {
+    values = yaml.safeLoad(fs.readFileSync(path.resolve(cmd.valuesFile)));
+  }
+
+  // If any values were set with --set
+  if (Object.keys(cmd.set).length) {
+    values = deepExtend(values, cmd.set);
+  }
+
+  compileAndDeploy({ packRef, stack, values });
 }
 
 function pack_ls() {
