@@ -3,7 +3,7 @@ const fs = require('fs-extra');
 const path = require('path');
 const deepExtend = require('deep-extend');
 const compile = require('./compile/compile');
-const deploy = require('./deploy');
+const { deploy, remove } = require('./deploy');
 const { inspectPack } = require('./repo');
 const { searchRepositories } = require('./query');
 
@@ -46,6 +46,7 @@ module.exports = {
   compileAndDeploy,
   compile,
   deploy,
+  remove,
   inspectPack,
   searchRepositories
 };

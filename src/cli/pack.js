@@ -47,6 +47,11 @@ stack - a Docker Stack namespace`
   .action(require('./actions').pack_deploy);
 
 program
+  .command('remove <pack> <stack>')
+  .description('Remove pack from a swarm cluster namespaced')
+  .action(require('./actions').pack_remove);
+
+program
   .command('version <pack>')
   .description(
     'Get version info for a pack. Includes version from packfile and last git commit hash for pack dir'

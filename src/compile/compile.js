@@ -50,15 +50,22 @@ function compile({ template, values, manifests, stack, packDir }) {
 
   // Add swarm-pack service lables
   // TODO - allow passing extra labels from e.g. swarm-sync
-  _.forEach(parsed.services, function(config, service) {
+  _.forEach(parsed.services, (config, service) => {
     const labels = {
       'pack.manifest.name': manifests.name,
-      'pack.manifest.version': manifests.version
+      'pack.manifest.version': manifests.version,
+      'com.docker.stack.namespace': stack
     };
+
+    const labelsStr = [
+      `pack.manifest.name=${manifests.name}`,
+      `pack.manifest.version=${manifests.version}`,
+      `com.docker.stack.namespace=${stack}`
+    ];
 
     parsed.services[service] = _.merge(config, {
       deploy: {
-        labels
+        labels: _.concat(config.deploy.labels, labelsStr)
       },
       labels
     });
