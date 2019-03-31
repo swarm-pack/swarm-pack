@@ -1,7 +1,17 @@
 #!/usr/bin/env node
 
 const program = require('commander');
+const { setObjectProperty } = require('../utils');
 const config = require('../config');
+
+function setValues(str, values) {
+  const [key, value] = str.split('=');
+  if (!key || !value) {
+    console.log('Error parsing --set. Should be in format --set image.tag=1.1.1');
+    process.exit(1);
+  }
+  return setObjectProperty(values, key, value);
+}
 
 program
   .version('0.0.1')
@@ -26,6 +36,13 @@ program
     `Deploy a swarm-pack, to a swarm cluster namespaced to a stack.
 pack - a pack reference in the repo (‘stable/drupal’), a full path to a directory or packaged chart, or a URL.
 stack - a Docker Stack namespace`
+  )
+  .option('-f, --values-file <str>', 'use a values file')
+  .option(
+    '--set <str>',
+    'set a value e.g. myvalue=foo (can be used multiple times)',
+    setValues,
+    {}
   )
   .action(require('./actions').pack_deploy);
 
