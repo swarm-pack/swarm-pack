@@ -20,7 +20,7 @@ function compile({ template, values, manifests, stack }) {
   function secretFromValue(key, opts) {
     const value = utils.getObjectProperty(key, values);
     // Max length for name is 64 chars
-    const name = `${sanitizeName(key.substr(0, 31))}_${md5(value)}`;
+    const name = `${sanitizeName(opts.name || key.substr(0, 31))}_${md5(value)}`;
     secrets.push({ value, name, ...opts });
     return name;
   }
