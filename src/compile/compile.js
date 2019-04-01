@@ -9,8 +9,12 @@ function compile({ template, values, manifests, stack, packDir }) {
 
   const secrets = [];
 
-  function sanitizeName(name) {
-    return name.substring(0, 8).replace(/ /g, '_');
+  function generateSecretName(name, value) {
+    // Max length 64 chars - remove whitespace
+    const secretName = name.replace(/ /g, '_').substr(0, 31);
+    const stackName = stack.replace(/ /g, '_').substr(0, 15);
+    const hash = md5(value).substr(0, 16);
+    return `${stackName}_${secretName}_${hash}`;
   }
 
   /**
@@ -19,13 +23,27 @@ function compile({ template, values, manifests, stack, packDir }) {
    */
   function secretFromValue(key, opts) {
     const value = utils.getObjectProperty(key, values);
-    // Max length for name is 64 chars
-    const name = `${sanitizeName(opts.name || key.substr(0, 31))}_${md5(value)}`;
-    secrets.push({ value, name, ...opts });
+    const name = generateSecretName(key, value);
+    secrets.push({
+      value,
+      name,
+      ...opts
+    });
     return name;
   }
 
+  function secretLiteral(name, value, opts) {
+    const secretName = generateSecretName(name, value);
+    secrets.push({
+      value,
+      name: secretName,
+      ...opts
+    });
+    return secretName;
+  }
+
   env.addGlobal('secret_from_value', secretFromValue);
+  env.addGlobal('secret', secretLiteral);
 
   const interpolatedTpl = nunjucks.renderString(template, values);
 
@@ -50,15 +68,22 @@ function compile({ template, values, manifests, stack, packDir }) {
 
   // Add swarm-pack service lables
   // TODO - allow passing extra labels from e.g. swarm-sync
-  _.forEach(parsed.services, function(config, service) {
+  _.forEach(parsed.services, (config, service) => {
     const labels = {
       'pack.manifest.name': manifests.name,
-      'pack.manifest.version': manifests.version
+      'pack.manifest.version': manifests.version,
+      'com.docker.stack.namespace': stack
     };
+
+    const labelsStr = [
+      `pack.manifest.name=${manifests.name}`,
+      `pack.manifest.version=${manifests.version}`,
+      `com.docker.stack.namespace=${stack}`
+    ];
 
     parsed.services[service] = _.merge(config, {
       deploy: {
-        labels
+        labels: _.concat(config.deploy.labels, labelsStr)
       },
       labels
     });
