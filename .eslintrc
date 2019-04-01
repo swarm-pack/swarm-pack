@@ -4,6 +4,7 @@
   "rules": {
     "prettier/prettier": ["error"],
     "no-console": "off",
-    "camelcase": "off"
+    "camelcase": "off",
+    'no-plusplus': "off"
   }
 }

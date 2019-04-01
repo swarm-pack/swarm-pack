@@ -10,6 +10,27 @@ function getObjectProperty(property, object) {
   return property.split('.').reduce((o, i) => o[i], object);
 }
 
+/**
+ * Set a property on an object using dot-notation string
+ * e.g. setObjectProperty({}, 'foo.bar', 'baz')
+ * returns {foo: {bar: 'baz'}}
+ * TODO - parsing of Array notation is for another day... e.g. "foo.bar[0]=baz"
+ */
+function setObjectProperty(object, key, value) {
+  const levels = key.split('.');
+  let curLevel = object;
+  let i = 0;
+  while (i < levels.length - 1) {
+    if (typeof curLevel[levels[i]] === 'undefined') {
+      curLevel[levels[i]] = {};
+    }
+    curLevel = curLevel[levels[i]];
+    i++;
+  }
+  curLevel[levels[levels.length - 1]] = value;
+  return object;
+}
+
 function readFile(fileName, type = 'utf-8') {
   return new Promise((resolve, reject) => {
     fs.readFile(fileName, type, (err, data) => (err ? reject(err) : resolve(data)));
@@ -76,5 +97,6 @@ module.exports = {
   readFile,
   ensurePathExisted,
   pipeableSpawn,
-  isFileEmpty
+  isFileEmpty,
+  setObjectProperty
 };
