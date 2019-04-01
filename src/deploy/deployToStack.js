@@ -76,7 +76,7 @@ function deployToStack({ compose, stack }) {
 
     pipeToDocker(
       s,
-      ['stack', 'deploy', '--compose-file', '-', stack],
+      ['stack', 'deploy', '--with-registry-auth', '--compose-file', '-', stack],
       onExit,
       onError,
       onStdout,
