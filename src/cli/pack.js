@@ -26,6 +26,11 @@ program.parse(process.argv);
 config.init({ program });
 
 program
+  .command('create')
+  .description('Create a new Pack using generator')
+  .action(require('./actions').create);
+
+program
   .command('ls [options]')
   .description('list deployed pack')
   .action(require('./actions').pack_ls);

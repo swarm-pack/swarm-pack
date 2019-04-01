@@ -3,10 +3,13 @@ const fs = require('fs-extra');
 const path = require('path');
 const Table = require('cli-table');
 const lodash = require('lodash');
+const inquirer = require('inquirer');
 const deepExtend = require('deep-extend');
 const { compileAndDeploy } = require('../index');
 const { queryInstalledPack, searchRepositories } = require('../query');
 const repo = require('../repo');
+const { generatePack } = require('../pack/create');
+const questions = require('./questions');
 
 function noEmptyValues(obj) {
   lodash.forOwn(obj, (value, key) => {
@@ -15,6 +18,10 @@ function noEmptyValues(obj) {
       process.exit(1);
     }
   });
+}
+
+function create() {
+  inquirer.prompt(questions.create).then(answers => generatePack(answers));
 }
 
 function pack_deploy(packRef, stack, cmd) {
@@ -149,5 +156,6 @@ module.exports = {
   repo_search,
   repo_add,
   repo_remove,
-  repo_list
+  repo_list,
+  create
 };
