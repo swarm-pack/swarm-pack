@@ -53,8 +53,13 @@ stack - a Docker Stack namespace`
 
 program
   .command('remove <pack> <stack>')
-  .description('Remove pack from a swarm cluster namespaced')
+  .description('Remove pack from a swarm cluster')
   .action(require('./actions').pack_remove);
+
+program
+  .command('upgrade <pack>')
+  .description('Upgrade an installed pack')
+  .action(require('./actions').pack_upgrade);
 
 program
   .command('version <pack>')

@@ -49,14 +49,19 @@ function pack_remove(pack, stack) {
   }
 }
 
+function pack_upgrade(pack) {
+  console.log('upgrade pack');
+  console.log(pack);
+}
+
 function pack_ls() {
   queryInstalledPack().then(packs => {
     const table = new Table({
-      head: ['Name', 'Version']
+      head: ['Name', 'Version', 'Stack']
     });
 
     packs.forEach(p => {
-      table.push([p.name, p.version]);
+      table.push([p.name, p.version, p.stack]);
     });
 
     console.log(table.toString());
@@ -157,6 +162,7 @@ async function repo_list(cmd) {
 module.exports = {
   pack_deploy,
   pack_remove,
+  pack_upgrade,
   pack_ls,
   pack_inspect,
   pack_inspect_version,

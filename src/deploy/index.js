@@ -14,6 +14,7 @@ async function deploy({ secrets, compose, manifests, stack }) {
 
   await cleanOutdatedService({ retainServices: deployedService, manifests, stack });
   await cleanSecret({ retainSecrets: secrets, manifests, stack });
+  console.log(`Deployed ${manifests.name} to ${stack}`);
 }
 
 async function remove({ name, stack }) {

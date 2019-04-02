@@ -1,52 +1,63 @@
 const _ = require('lodash');
-const { pipeToDocker } = require('../services/docker');
+// const { pipeToDocker } = require('../services/docker');
+const docker = require('../services/docker');
 
-function queryInstalledPack() {
-  return new Promise((resolve, reject) => {
-    let packs = [];
-    // eslint-disable-next-line no-unused-vars
-    const onExit = (code, signal) => {
-      if (code === 0) {
-        resolve(packs);
-      } else {
-        reject();
-      }
-    };
+async function queryInstalledPack() {
+  const services = await docker.getDockerodeClient().listServices();
 
-    const onError = err => reject(err);
+  return _.uniqWith(
+    services.map(s => ({
+      name: s.Spec.Labels['pack.manifest.name'],
+      version: s.Spec.Labels['pack.manifest.version'],
+      stack: s.Spec.Labels['com.docker.stack.namespace']
+    })),
+    _.isEqual
+  );
+  // return new Promise((resolve, reject) => {
+  //   let packs = [];
+  //   // eslint-disable-next-line no-unused-vars
+  //   const onExit = (code, signal) => {
+  //     if (code === 0) {
+  //       resolve(packs);
+  //     } else {
+  //       reject();
+  //     }
+  //   };
 
-    const onStderr = data => console.log(`${data}`);
+  //   const onError = err => reject(err);
 
-    const onStdout = data => {
-      // console.log(`${data}`);
-      // console.log(
-      packs = data
-        .toString()
-        .split('\n')
-        .map(s => s.split(',').filter(l => l.indexOf('pack.manifest') > -1))
-        .filter(s => !_.isEmpty(s))
-        .map(labelArr => {
-          const label = {};
-          labelArr.forEach(l => {
-            if (l.indexOf('pack.manifest.name=') > -1) {
-              // eslint-disable-next-line prefer-destructuring
-              label.name = l.split('=')[1];
-            }
+  //   const onStderr = data => console.log(`${data}`);
 
-            if (l.indexOf('pack.manifest.version=') > -1) {
-              // eslint-disable-next-line prefer-destructuring
-              label.version = l.split('=')[1];
-            }
-          });
+  //   const onStdout = data => {
+  //     // console.log(`${data}`);
+  //     // console.log(
+  //     packs = data
+  //       .toString()
+  //       .split('\n')
+  //       .map(s => s.split(',').filter(l => l.indexOf('pack.manifest') > -1))
+  //       .filter(s => !_.isEmpty(s))
+  //       .map(labelArr => {
+  //         const label = {};
+  //         labelArr.forEach(l => {
+  //           if (l.indexOf('pack.manifest.name=') > -1) {
+  //             // eslint-disable-next-line prefer-destructuring
+  //             label.name = l.split('=')[1];
+  //           }
 
-          return label;
-        });
+  //           if (l.indexOf('pack.manifest.version=') > -1) {
+  //             // eslint-disable-next-line prefer-destructuring
+  //             label.version = l.split('=')[1];
+  //           }
+  //         });
 
-      packs = _.uniqWith(packs, _.isEqual);
-    };
+  //         return label;
+  //       });
 
-    pipeToDocker(null, ['ps', '--format', '{{.Labels}}'], onExit, onError, onStdout, onStderr);
-  });
+  //     packs = _.uniqWith(packs, _.isEqual);
+  //   };
+
+  //   pipeToDocker(null, ['ps', '--format', '{{.Labels}}'], onExit, onError, onStdout, onStderr);
+  // });
 }
 
 module.exports = queryInstalledPack;
