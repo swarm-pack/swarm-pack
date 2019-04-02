@@ -8,31 +8,33 @@ async function removeService({ ID }) {
     .then(() => console.log(`Cleaned service ${ID}`));
 }
 
-async function cleanOutdatedServices({ deployedService, manifests, stack }) {
+async function cleanOutdatedServices({ manifests, stack, retainServices }) {
   docker
     .getDockerodeClient()
     .listServices()
     .then(result => {
       return result.filter(
-        service =>
-          service.Spec.Labels['pack.manifest.name'] === manifests.name &&
-          service.Spec.Labels['com.docker.stack.namespace'] === stack
+        s =>
+          s.Spec.Labels['pack.manifest.name'] === manifests.name &&
+          s.Spec.Labels['com.docker.stack.namespace'] === stack
       );
     })
     .then(matchingServices => {
       function matchService(service, services) {
         return (
           services.findIndex(s => {
-            return (s.id && s.id.indexOf(service.ID) > -1) || s.name === service.Spec.Name;
+            return (
+              (s.id && s.id.indexOf(service.ID) > -1) || s.name === service.Spec.Name
+            );
           }) === -1
         );
       }
 
-      return matchingServices.filter(service => matchService(service, deployedService));
+      return matchingServices.filter(service => matchService(service, retainServices));
     })
     .then(outdatedServices => {
-      return Promise.all(outdatedServices.map(service => removeService(service))).catch(err =>
-        console.log(err)
+      return Promise.all(outdatedServices.map(service => removeService(service))).catch(
+        err => console.log(err)
       );
     });
 }
