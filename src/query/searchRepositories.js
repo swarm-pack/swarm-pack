@@ -1,4 +1,5 @@
 const glob = require('glob');
+const _ = require('lodash');
 const sanitize = require('sanitize-filename');
 const yaml = require('js-yaml');
 const { cacheUpdate } = require('../repo');
@@ -20,6 +21,7 @@ async function searchRepositories(keyword) {
   const packs = await Promise.all(
     packfiles.map(async pf => {
       const doc = yaml.safeLoad(await readFile(pf));
+
       const pack = {
         name: doc.pack.name,
         version: doc.pack.version,
@@ -29,6 +31,7 @@ async function searchRepositories(keyword) {
           .replace('/packfile.yml', '')
           .split('/')
           .map((v, i) => (i === 1 ? v.split('_')[0] : v)) // Remove MD5 hash
+          .filter(v => !_.isEmpty(v))
           .join('/')
       };
 

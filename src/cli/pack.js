@@ -57,7 +57,7 @@ program
   .action(require('./actions').pack_remove);
 
 program
-  .command('upgrade <pack>')
+  .command('upgrade [pack]')
   .description('Upgrade an installed pack')
   .action(require('./actions').pack_upgrade);
 

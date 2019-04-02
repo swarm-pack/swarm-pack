@@ -5,7 +5,7 @@ const deepExtend = require('deep-extend');
 const compile = require('./compile/compile');
 const { deploy, remove } = require('./deploy');
 const { inspectPack } = require('./repo');
-const { searchRepositories } = require('./query');
+const { searchRepositories, queryInstalledPack } = require('./query');
 
 async function compileAndDeploy({ stack, packRef, values = {} }) {
   const pack = await inspectPack(packRef);
@@ -42,11 +42,44 @@ async function compileAndDeploy({ stack, packRef, values = {} }) {
   );
 }
 
+/**
+ * Supper rough implementation
+ * Still need to keep track of current secret
+ * Questions:
+ * - How to scope it in to certain stack?
+ * - Semver pattern ?
+ * - How do I track if I deployed a pack from my repo not in public repo?
+ * @param {*} pack
+ */
+async function upgrade(pack) {
+  let installedPacks = await queryInstalledPack();
+
+  if (typeof pack === 'string') {
+    installedPacks = installedPacks.filter(ip => ip.name === pack);
+  }
+
+  return Promise.all(
+    installedPacks.map(async ip => {
+      let availablePacks = await searchRepositories(ip.name);
+
+      availablePacks = availablePacks.sort((a, b) => (a.version <= b.version ? 1 : -1));
+
+      const isUpgrade = availablePacks[0].version > ip.version;
+
+      if (isUpgrade) {
+        return compileAndDeploy({ stack: ip.stack, packRef: availablePacks[0].packRef });
+      }
+      return Promise.resolve();
+    })
+  );
+}
+
 module.exports = {
   compileAndDeploy,
   compile,
   deploy,
   remove,
   inspectPack,
-  searchRepositories
+  searchRepositories,
+  upgrade
 };

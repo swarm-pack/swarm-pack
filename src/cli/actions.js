@@ -5,7 +5,7 @@ const Table = require('cli-table');
 const lodash = require('lodash');
 const inquirer = require('inquirer');
 const deepExtend = require('deep-extend');
-const { compileAndDeploy, remove } = require('../index');
+const { compileAndDeploy, remove, upgrade } = require('../index');
 const { queryInstalledPack, searchRepositories } = require('../query');
 const repo = require('../repo');
 const { generatePack } = require('../pack/create');
@@ -49,9 +49,8 @@ function pack_remove(pack, stack) {
   }
 }
 
-function pack_upgrade(pack) {
-  console.log('upgrade pack');
-  console.log(pack);
+async function pack_upgrade(pack) {
+  await upgrade(pack);
 }
 
 function pack_ls() {
