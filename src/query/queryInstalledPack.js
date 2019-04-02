@@ -1,5 +1,4 @@
 const _ = require('lodash');
-// const { pipeToDocker } = require('../services/docker');
 const docker = require('../services/docker');
 
 async function queryInstalledPack() {
