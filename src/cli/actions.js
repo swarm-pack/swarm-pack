@@ -5,7 +5,7 @@ const Table = require('cli-table');
 const lodash = require('lodash');
 const inquirer = require('inquirer');
 const deepExtend = require('deep-extend');
-const { compileAndDeploy } = require('../index');
+const { compileAndDeploy, remove } = require('../index');
 const { queryInstalledPack, searchRepositories } = require('../query');
 const repo = require('../repo');
 const { generatePack } = require('../pack/create');
@@ -39,6 +39,14 @@ function pack_deploy(packRef, stack, cmd) {
   }
 
   compileAndDeploy({ packRef, stack, values });
+}
+
+function pack_remove(pack, stack) {
+  try {
+    remove({ name: pack, stack });
+  } catch (err) {
+    console.error(err.message);
+  }
 }
 
 function pack_ls() {
@@ -148,6 +156,7 @@ async function repo_list(cmd) {
 
 module.exports = {
   pack_deploy,
+  pack_remove,
   pack_ls,
   pack_inspect,
   pack_inspect_version,
