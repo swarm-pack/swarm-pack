@@ -64,16 +64,14 @@ services:
 
 <<%- if default_port %>>
     #Ports
-{% for port in ports %}
-{% if loop.first %}
-    ports:
-{% endif %}
-      - {{ port }}
-{% endfor %}
+  {%- if ports | length %}
+    ports: {{ ports | dumpyml(4)}}
+  {%- endif %}
 <<% endif %>>
 
     # Deploy
     deploy:
+      {{ deploy | dumpyml(6)}}
       labels:
 <<%- if use_sync %>>
         - "swarm-sync.managed={{ swarm_sync.managed }}"
@@ -84,16 +82,6 @@ services:
         - "traefik.frontend.rule=Host:{{ traefik.hostname }}"
         - "traefik.backend.loadbalancer.stickiness={{ traefik.stickiness }}"
 <<%- endif %>>
-
-      # Add various extra "deploy" sections if they are defined
-{% for section in 
-  ["endpoint_mode", "mode", "placement", "replicas", "resources", "restart_policy", "rollback_config", "update_config"]
-%}
-    {%- if deploy[section] %}
-      {{section}}: {{ deploy[section] | dump }}
-    {%- endif %}
-{% endfor %}
-
     # /Deploy
 
     {%- if logging | length %}
