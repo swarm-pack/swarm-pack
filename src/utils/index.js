@@ -98,13 +98,15 @@ function pipeableSpawn(stream, command, args, onExit, onError, onStdout, onStder
  *  - Objects or arrays with no own properties / items
  *  - Undefined, null, NaN
  * Non-empty things:
+ *  - Boolean true or false
+ *  - All numbers including 0
  *  - Strings with characters
  *  - Objects and arrays with props or items
- *  - All numbers including 0
  */
 function isEmpty(thing) {
   if (typeof thing === 'number' && !Number.isNaN(thing)) return false;
   if (typeof thing === 'object' && thing !== null) return Object.keys(thing).length === 0;
+  if (typeof thing === 'boolean') return false;
   return !thing;
 }
 
