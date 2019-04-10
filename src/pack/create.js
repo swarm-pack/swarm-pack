@@ -9,7 +9,7 @@ const composeFileName = 'docker-compose.tpl.yml';
 const packTemplate = `---
 pack:
   name: <<pack_name>>
-  version: 0.0.1
+  version: 0.1.0
   #home: URL for Pack homepage, e.g. github URL
   description: <<pack_description>>
   keywords: []
@@ -24,21 +24,28 @@ image:
   tag: <<image_tag>>
 <<%- if use_sync %>>
   tag_pattern: <<tag_pattern>>
-<<% endif %>>
+<<%- endif %>>
 
 <<%- if default_port %>>
   ports:
     - <<default_port>>
 <<%- endif %>>
 
+# Deploy allows all docker-compose options, except for labels
 deploy:
   mode: replicated
   replicas: 1
-  placement_constraints: []
-<<%- if use_sync %>>
-swarm-sync:
+
+<<% if use_sync %>>
+swarm_sync:
   managed: true
-<<% endif %>>
+<<%- endif %>>
+
+# Accepts same options/format as docker-compose
+logging:
+
+networks:
+  default: 
 
 <<%- if use_traefik %>>
 traefik:
@@ -53,47 +60,44 @@ version: '3.6'
 
 services:
   {{ service_name }}:
-    image: {{ image.repository }}:{{ image.tag }}
+    image: "{{ image.repository }}:{{ image.tag }}"
 
 <<%- if default_port %>>
     #Ports
-{% for port in ports %}
-{% if loop.first %}
-    ports:
-{% endif %}
-      - {{ port }}
-{% endfor %}
+  {%- if ports | length %}
+    ports: {{ ports | dumpyml(4)}}
+  {%- endif %}
 <<% endif %>>
 
+    # Deploy
     deploy:
-      mode: {{ deploy.mode }}
-      replicas: {{ deploy.replicas }}
-
-      # Placement constraints
-{% if deploy.placement_constraints | length %}
-      placement:
-        constraints:
-{% for p in deploy.placement_constraints %}
-          - "{{ p }}"
-{% endfor %}
-{% endif %}
-
+      {{ deploy | dumpyml(6)}}
       labels:
-        - "swarm-pack.managed=true"
 <<%- if use_sync %>>
-{% if swarm-sync.managed %}
-        - "swarm-sync.managed=true"
-{% endif %}
-{% if image.tag_pattern %}
-        - "swarm-sync.image-pattern={{ image.tag_pattern }}"
-{% endif %}
-<<% endif %>>
+        - "swarm-sync.managed={{ swarm_sync.managed }}"
+        {% if image.tag_pattern %}- "swarm-sync.image-pattern={{ image.tag_pattern }}"{% endif %}
+<<%- endif %>>
 <<%- if use_traefik %>>
         - "traefik.port=traefik.port"
         - "traefik.frontend.rule=Host:{{ traefik.hostname }}"
         - "traefik.backend.loadbalancer.stickiness={{ traefik.stickiness }}"
-<<% endif %>>
+<<%- endif %>>
+    # /Deploy
 
+    {%- if logging | length %}
+      {{logging}}: {{ logging | dump }}
+    {%- endif %}
+
+    networks:
+    {%- for net, def in networks %}
+      - {{ net }}
+    {%- endfor %}
+
+    # volumes:
+
+## Other assets (not-service)
+networks: {{ networks | dump }}
+# volumes:
 `;
 
 function generatePack(answers) {
