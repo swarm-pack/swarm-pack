@@ -9,10 +9,18 @@ function compile({ template, values, manifests, stack, packDir }) {
 
   const secrets = [];
 
-  // Extra filters
+  // Filters & helpers
   env.addFilter('dumpyml', function(o, indent, opts) {
     return yaml
       .safeDump(o, opts)
+      .replace(/^/gm, ' '.repeat(indent))
+      .trim();
+  });
+
+  env.addGlobal('dumpblock_if_set', ({ value, indent = 0, root = false }) => {
+    if (utils.isEmpty(value)) return '';
+    return yaml
+      .safeDump(root ? { [root]: value } : value)
       .replace(/^/gm, ' '.repeat(indent))
       .trim();
   });
