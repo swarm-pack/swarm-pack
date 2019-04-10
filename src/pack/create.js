@@ -63,10 +63,8 @@ services:
     image: "{{ image.repository }}:{{ image.tag }}"
 
 <<%- if default_port %>>
-    #Ports
-  {%- if ports | length %}
-    ports: {{ ports | dumpyml(4)}}
-  {%- endif %}
+    # Ports
+    {{ dumpblock_if_set({value: ports, indent: 4, root: 'ports'}) }}
 <<% endif %>>
 
     # Deploy
@@ -84,9 +82,8 @@ services:
 <<%- endif %>>
     # /Deploy
 
-    {%- if logging | length %}
-      {{logging}}: {{ logging | dump }}
-    {%- endif %}
+    # Logging
+    {{ dumpblock_if_set({value: logging, indent: 4, root: 'logging'}) }}
 
     networks:
     {%- for net, def in networks %}
