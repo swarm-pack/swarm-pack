@@ -9,6 +9,14 @@ function compile({ template, values, manifests, stack, packDir }) {
 
   const secrets = [];
 
+  // Extra filters
+  env.addFilter('dumpyml', function(o, indent, opts) {
+    return yaml
+      .safeDump(o, opts)
+      .replace(/^/gm, ' '.repeat(indent))
+      .trim();
+  });
+
   function generateSecretName(name, value) {
     // Max length 64 chars - remove whitespace
     const secretName = name.replace(/ /g, '_').substr(0, 31);
@@ -52,7 +60,7 @@ function compile({ template, values, manifests, stack, packDir }) {
     parsed = yaml.safeLoad(interpolatedTpl);
   } catch (error) {
     console.log('Error parsing compiled docker-compose.yml');
-    console.log(error.reason);
+    console.log(error);
     console.log(interpolatedTpl);
     process.exit(1);
   }
