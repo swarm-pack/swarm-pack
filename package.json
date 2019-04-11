@@ -1,6 +1,6 @@
 {
   "name": "swarm-pack",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "description": "Package management for Docker Swarm",
   "main": "src/module.js",
   "dependencies": {
@@ -19,7 +19,7 @@
     "js-yaml": "^3.13.0",
     "lodash": "^4.17.11",
     "md5": "^2.2.1",
-    "nexe": "^3.0.0-beta.15",
+    "nexe": "^3.1.0",
     "nunjucks": "^3.1.7",
     "pkg": "^4.3.7",
     "sanitize-filename": "^1.6.1",

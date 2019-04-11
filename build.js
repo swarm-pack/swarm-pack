@@ -20,11 +20,12 @@ async function buildTargets() {
     
     await compile({
       input: './src/cli/pack.js',
-      output: path.join(bundleDir, `swarm-pack-${version}-${target}`),
+      output: path.join(bundleDir, `swarm-pack`),
       target: targetRef
     })
-    //sh.cd(bundleDir);
-    //sh.exec(`gzip swarm-pack-${version}(?!.*\.gz$) > swarm-pack-${version}-${target}.gz`)
+    sh.cd(bundleDir);
+    sh.exec(`tar --exclude='*.tgz' -zcvf swarm-pack-${target}-${version}.tgz swarm-pack*`);
+    sh.exec(`rm -f swarm-pack swarm-pack.exe`);
   }
 
 }
