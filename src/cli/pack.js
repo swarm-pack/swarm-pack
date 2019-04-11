@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const program = require('commander');
+const yaml = require('js-yaml');
 const { setObjectProperty } = require('../utils');
 const config = require('../config');
 
@@ -10,7 +11,7 @@ function setValues(str, values) {
     console.log('Error parsing --set. Should be in format --set image.tag=1.1.1');
     process.exit(1);
   }
-  return setObjectProperty(values, key, value);
+  return setObjectProperty(values, key, yaml.safeLoad(value));
 }
 
 program
