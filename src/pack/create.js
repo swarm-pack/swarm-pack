@@ -45,13 +45,16 @@ swarm_sync:
 logging:
 
 networks:
-  default: 
+  default:
+    driver: overlay
+    attachable: true
 
 <<%- if use_traefik %>>
 traefik:
   port: <<traefik_port>>
   hostname: <<traefik_host>>
   stickiness: True
+  network: 
 <<%- endif %>>
 `;
 
@@ -79,6 +82,7 @@ services:
         - "traefik.port=traefik.port"
         - "traefik.frontend.rule=Host:{{ traefik.hostname }}"
         - "traefik.backend.loadbalancer.stickiness={{ traefik.stickiness }}"
+        {% if traefik.network %}- "traefik.docker.network={{ traefik.network }}"{% endif %}
 <<%- endif %>>
     # /Deploy
 
