@@ -7,6 +7,15 @@ const { deploy, remove } = require('./deploy');
 const { inspectPack } = require('./repo');
 const { searchRepositories } = require('./query');
 
+async function mergeValuesWithPackDefaults({ packRef, values = {} }) {
+  const pack = await inspectPack(packRef);
+  return deepExtend(
+    {},
+    yaml.safeLoad(await fs.readFile(`${pack.dir}/defaults.yml`)),
+    values
+  );
+}
+
 async function compileAndDeploy({ stack, packRef, values = {} }) {
   const pack = await inspectPack(packRef);
 
@@ -44,6 +53,7 @@ async function compileAndDeploy({ stack, packRef, values = {} }) {
 
 module.exports = {
   compileAndDeploy,
+  mergeValuesWithPackDefaults,
   compile,
   deploy,
   remove,
