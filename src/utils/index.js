@@ -1,5 +1,33 @@
 const fs = require('fs-extra');
 const { spawn } = require('child_process');
+const md5 = require('md5');
+const objectHash = require('object-hash');
+
+const revHashLength = 16;
+
+// Take a buffer, return a string. Defaults to utf8 encoding
+function stringToBase64(string, encoding) {
+  if (!encoding) {
+    encoding = 'utf8';
+  }
+  return Buffer.from(string, encoding).toString('base64');
+}
+
+function revHashStr(str) {
+  return md5(str).substr(0, revHashLength);
+}
+
+async function revHashFile(path) {
+  return md5(await fs.readFile(path)).substr(0, revHashLength);
+}
+
+function revHashFileSync(path) {
+  return md5(fs.readFileSync(path)).substr(0, revHashLength);
+}
+
+function revHashObject(o) {
+  return objectHash(o, { algorithm: 'md5' }).substr(0, revHashLength);
+}
 
 /**
  * Get a property of a (nested) object using a dot-notation string
@@ -53,45 +81,6 @@ function isFileEmpty(path) {
   return fs.statSync(path).size === 0;
 }
 
-function pipeableSpawn(stream, command, args, onExit, onError, onStdout, onStderr) {
-  const child = spawn(command, args, { env: process.env });
-  if (stream) {
-    stream.pipe(child.stdin);
-  }
-
-  child.on('exit', (code, signal) => {
-    if (onExit) {
-      onExit(code, signal);
-    } else {
-      console.log(`Process exited with code ${code} and signal ${signal}`);
-    }
-  });
-
-  child.on('error', err => {
-    if (onError) {
-      onError(err);
-    } else {
-      console.log(`Process exited with error ${err}`);
-    }
-  });
-
-  child.stdout.on('data', data => {
-    if (onStdout) {
-      onStdout(data);
-    } else {
-      console.log(`Process stdout:\n${data}`);
-    }
-  });
-
-  child.stderr.on('data', data => {
-    if (onStderr) {
-      onStderr(data);
-    } else {
-      console.log(`Process stderr:\n${data}`);
-    }
-  });
-}
-
 /**
  * Empty things:
  *  - Zero length string
@@ -110,12 +99,24 @@ function isEmpty(thing) {
   return !thing;
 }
 
+/**
+ * Async function to wait specific amount of `ms` then resolve a promise (no return value)
+ */
+async function wait(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 module.exports = {
   getObjectProperty,
+  stringToBase64,
   readFile,
   ensurePathExisted,
-  pipeableSpawn,
   isFileEmpty,
   setObjectProperty,
-  isEmpty
+  isEmpty,
+  revHashStr,
+  revHashFile,
+  revHashFileSync,
+  revHashObject,
+  wait
 };

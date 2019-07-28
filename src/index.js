@@ -2,61 +2,22 @@ const yaml = require('js-yaml');
 const fs = require('fs-extra');
 const path = require('path');
 const deepExtend = require('deep-extend');
-const compile = require('./compile/compile');
-const { deploy, remove } = require('./deploy');
-const { inspectPack } = require('./repo');
-const { searchRepositories } = require('./query');
+const { loadPack } = require('./lib/pack');
+const { Release } = require('./lib/release');
+const { deployRelease } = require('./lib/docker');
 
 async function mergeValuesWithPackDefaults({ packRef, values = {} }) {
-  const pack = await inspectPack(packRef);
-  return deepExtend(
-    {},
-    yaml.safeLoad(await fs.readFile(`${pack.dir}/defaults.yml`)),
-    values
-  );
+  const pack = await loadPack(packRef);
+  return deepExtend({}, pack.defaults, values);
 }
 
 async function compileAndDeploy({ stack, packRef, values = {} }) {
-  const pack = await inspectPack(packRef);
-
-  // Required files
-  const template = (await fs.readFile(
-    path.join(pack.dir, 'docker-compose.tpl.yml')
-  )).toString('utf8');
-
-  // Optional files
-  const defaultsStr = await fs
-    .readFile(path.join(pack.dir, 'defaults.yml'))
-    .catch(() => '');
-  let defaults;
-  try {
-    defaults = yaml.safeLoad(defaultsStr);
-  } catch (error) {
-    console.log('Error parsing defaults.yml');
-    console.log(error.reason);
-    console.log(defaultsStr);
-    process.exit(1);
-  }
-
-  const newValues = deepExtend({}, defaults, values);
-
-  return deploy(
-    compile({
-      manifests: pack.packFile.pack,
-      packDir: pack.dir,
-      template,
-      values: newValues,
-      stack
-    })
-  );
+  const pack = await loadPack({ packRef });
+  const release = new Release({ pack, stack, values });
+  await deployRelease({ release });
 }
 
 module.exports = {
   compileAndDeploy,
-  mergeValuesWithPackDefaults,
-  compile,
-  deploy,
-  remove,
-  inspectPack,
-  searchRepositories
+  mergeValuesWithPackDefaults
 };

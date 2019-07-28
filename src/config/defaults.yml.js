@@ -11,6 +11,6 @@ docker:
 
 # Configuration for pack repos. Official is recommended to keep.
 repositories:
-  - name: official
-    url: https://github.com/swarm-pack/repository
+  - name: incubator
+    url: http://swarmpack-incubator.s3-website-ap-southeast-1.amazonaws.com
 `;
