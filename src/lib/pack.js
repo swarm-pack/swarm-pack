@@ -1,7 +1,8 @@
 const path = require('path');
 const fs = require('fs-extra');
 const yaml = require('js-yaml');
-const tar = require('tar-stream');
+const tarStream = require('tar-stream');
+const tar = require('tar');
 const gunzip = require('gunzip-maybe');
 const toString = require('stream-to-string');
 const walk = require('klaw');
@@ -46,7 +47,7 @@ class Pack {
  */
 async function loadPackFromFile(packFilePath) {
   const pack = new Pack();
-  const extract = tar.extract();
+  const extract = tarStream.extract();
   return new Promise((resolve, reject) => {
     fs.createReadStream(packFilePath)
       .pipe(gunzip())
@@ -90,11 +91,13 @@ async function loadPackFromDir(packDirPath) {
 async function loadPack({ packRef, version }) {
   // Pack is path to local pack dir
   if (fs.pathExistsSync(path.resolve(packRef, 'packfile.yml'))) {
+    console.log(`Loading pack from local directory ${packRef}`);
     return loadPackFromDir(packRef);
   }
 
   // Pack is path to local .tgz
   if (fs.pathExistsSync(path.resolve(packRef)) && path.extname(packRef) === '.tgz') {
+    console.log(`Loading pack from local file ${packRef}`);
     return loadPackFromFile(packRef);
   }
 
@@ -108,6 +111,7 @@ async function loadPack({ packRef, version }) {
   if (repoPackMatch && repoPackMatch.groups.repo && repoPackMatch.groups.pack) {
     const { repo, pack } = repoPackMatch.groups;
     if (repoExists(repo)) {
+      console.log(`Loading pack from repo ${repo}`);
       const cachedPackPath = await getRepoPack({ repoName: repo, pack, version });
       if (cachedPackPath) return loadPackFromFile(cachedPackPath);
     }

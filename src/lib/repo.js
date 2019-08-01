@@ -1,13 +1,14 @@
 const path = require('path');
 const fs = require('fs-extra');
 const yaml = require('js-yaml');
-const { satisfies, compare } = require('semver');
+const { satisfies, compare, valid } = require('semver');
 const got = require('got');
 const walk = require('klaw');
 const _ = require('lodash');
-const semver = require('semver');
-const config = require('../config').get();
+const config = require('../config');
 const { revHashFileSync, revHashStr } = require('../utils');
+
+const svOpts = { includePrerelease: config.includePrerelease };
 
 class Repo {
   constructor({ name, url }) {
@@ -18,7 +19,7 @@ class Repo {
   async getEntries() {
     try {
       return yaml.safeLoad(
-        await fs.readFile(path.join(await cacheResolver(this), 'index.yml'))
+        await fs.readFile(path.join(cacheResolver(this), 'index.yml'))
       ).entries;
     } catch (e) {
       console.log(e);
@@ -33,17 +34,15 @@ class Repo {
   async getPackEntry({ pack, version = '>0.0.0' }) {
     const entries = await this.getEntries();
     const entry = entries
-      .filter(e => e.name === pack && satisfies(e.version, version))
+      .filter(e => e.name === pack && satisfies(e.version, version, svOpts))
       .reduce(
-        (curr, e) => (curr ? (compare(e.version, curr.version) > 0 ? e : curr) : e),
+        (curr, e) => (curr ? (compare(e.version, curr.version, svOpts) > 0 ? e : curr) : e),
         false
       );
 
     if (entry) {
-      entry.cachePath = path.join(
-        await cacheResolver(this),
-        `${entry.name}-${entry.version}.tgz`
-      );
+      const filename = `${entry.name}-${entry.version}.tgz`;
+      entry.cachePath = path.join( cacheResolver(this), filename);
     }
 
     return entry;
@@ -76,11 +75,11 @@ async function repoExists(name) {
  * If config.cacheDir, path to repo is function of name & hashed url, appended to config.cacheDir
  * Otherwise, it will be a tempdir
  */
-async function cacheResolver({ name, url }) {
+function cacheResolver({ name, url }) {
   let localPath;
   if (config.cacheDir) {
     localPath = path.join(config.cacheDir, `${name}_${revHashStr(url)}`);
-    await fs.ensureDir(localPath);
+    fs.ensureDirSync(localPath);
   } else {
     localPath = tmp.dirSync().name;
   }
@@ -96,7 +95,7 @@ function parsePackBundleName(filename) {
     filename
   );
   const { name, version } = regexpResult.groups;
-  if (!semver.valid(version)) {
+  if (!valid(version)) {
     throw Error(`Invalid filename (could not parse version ${version})`);
   }
   return { name, version };
@@ -196,7 +195,7 @@ async function updateAllRepos() {
  * Returns a complete path to the cloned/updated dir
  */
 async function updateRepo({ name, url }) {
-  const localPath = await cacheResolver({ name, url });
+  const localPath = cacheResolver({ name, url });
   try {
     const indexyml = await got(`${url}/index.yml`).then(response => response.body);
     await fs.writeFile(path.join(localPath, 'index.yml'), indexyml);
@@ -234,7 +233,7 @@ async function indexRepo({ baseUrl = '', mergeWith = false }) {
       });
     }
 
-    index.entries.sort((a, b) => a.name - b.name || semver.compare(a.version, b.version));
+    index.entries.sort((a, b) => a.name - b.name || compare(a.version, b.version, svOpts));
 
     if (index.entries.length > 0) {
       fs.writeFileSync(path.join(process.cwd(), 'index.yml'), yaml.safeDump(index));
@@ -242,11 +241,25 @@ async function indexRepo({ baseUrl = '', mergeWith = false }) {
   });
 }
 
+async function searchCache(keyword) {
+  return config.repositories.reduce((found, repo) => {
+    const repoIndexPath = path.join(cacheResolver( repo ), 'index.yml');
+    if (fs.pathExistsSync(repoIndexPath)) {
+      const repoEntries = yaml.safeLoad(fs.readFileSync(repoIndexPath)).entries;
+      return found.concat(repoEntries.filter(e => {
+        return e.name.includes(keyword)
+      }).map(e => ({repo: repo.name, ...e})))
+    }
+  }, [])
+}
+
 module.exports = {
   getRepoPack,
   repoExists,
   addRepo,
   removeRepo,
+  indexRepo,
   updateAllRepos,
-  loadIndexFile
+  loadIndexFile,
+  searchCache
 };

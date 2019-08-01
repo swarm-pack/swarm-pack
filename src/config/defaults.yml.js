@@ -4,6 +4,8 @@
 module.exports = `---
 # SWARM-PACK DEFAULT CONFIGURATION FILE
 
+includePrerelease: false
+
 # Docker connection configuration
 docker:
   socketPath: "/var/run/docker.sock"

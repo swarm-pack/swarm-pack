@@ -11,7 +11,6 @@ async function deployRelease({ release }) {
   for (const secret of release.secrets) {
     await deploySecret({ secret, pack: pack.metadata.name, stack });
   }
-
   await deployToStack(release);
 
   // Pause to avoid Docker weirdness when immediately accessing deployed objects
@@ -69,6 +68,7 @@ async function findReleaseObjects({ pack, stack, version, digest }) {
  */
 function releaseLabelFilter({ pack, stack, version, digest }) {
   return function(o) {
+    console.log(`filter check for ${o.Spec.Name}`);
     if (pack && o.Spec.Labels['io.github.swarm-pack.pack.name'] !== pack) return false;
     if (version && o.Spec.Labels['io.github.swarm-pack.pack.version'] !== version)
       return false;

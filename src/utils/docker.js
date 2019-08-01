@@ -1,5 +1,5 @@
 const Docker = require('dockerode');
-const config = require('../config').get();
+const config = require('../config');
 
 function getDockerodeClient() {
   if (config.docker.host) {

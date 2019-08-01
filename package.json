@@ -68,7 +68,7 @@
     "url": "git+https://github.com/swarm-pack/swarm-pack.git"
   },
   "bin": {
-    "swarm-pack": "./src/cli/pack.js"
+    "swarm-pack": "./src/cli/index.js"
   },
   "lint-staged": {
     "src/**/*.{js,jsx}": [
