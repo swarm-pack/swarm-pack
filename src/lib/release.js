@@ -1,5 +1,4 @@
 const yaml = require('js-yaml');
-const _ = require('lodash');
 const deepExtend = require('deep-extend');
 const nunjucks = require('../utils/nunjucks');
 const { getObjectProperty, revHashObject } = require('../utils');
@@ -69,14 +68,17 @@ class Release {
 
     // Add swarm-pack service lables
     // TODO - allow passing extra labels from e.g. swarm-sync
-    for (const [service, definition] of Object.entries(
-      this.dockerComposeObject.services
-    )) {
-      definition.labels = definition.labels || {};
-      definition.labels['io.github.swarm-pack.pack.name'] = this.pack.metadata.name;
-      definition.labels['io.github.swarm-pack.pack.version'] = this.pack.metadata.version;
-      definition.labels['io.github.swarm-pack.release.digest'] = revHashObject(this);
-      definition.labels['com.docker.stack.namespace'] = this.stack;
+    for (const definition of Object.values(this.dockerComposeObject.services)) {
+      Object.assign(definition, {
+        deploy: {
+          labels: {
+            'io.github.swarm-pack.pack.name': this.pack.metadata.name,
+            'io.github.swarm-pack.pack.version': this.pack.metadata.version,
+            'io.github.swarm-pack.release.digest': revHashObject(this),
+            'com.docker.stack.namespace': this.stack
+          }
+        }
+      });
     }
     this.compose = yaml.safeDump(this.dockerComposeObject);
     this.compiled = true;

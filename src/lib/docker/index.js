@@ -3,46 +3,19 @@ const { deploySecret } = require('./secret');
 const { deployToStack } = require('./service');
 const { wait } = require('../../utils');
 
-async function deployRelease({ release }) {
-  const client = docker.getDockerodeClient();
-  const { stack, pack } = release;
-  await release.compile();
-
-  for (const secret of release.secrets) {
-    await deploySecret({ secret, pack: pack.metadata.name, stack });
-  }
-  await deployToStack(release);
-
-  // Pause to avoid Docker weirdness when immediately accessing deployed objects
-  await wait(2000);
-
-  // Remove any Docker Secrets from old versions of this release
-  // TODO - this used to remove services too but I removed it - can consider adding back if needed
-  const releaseObjects = await findReleaseObjects({ stack, pack: pack.metadata.name });
-  const deployedSecrets = release.secrets.map(s => s.deployName);
-
-  for (secret of releaseObjects.secrets) {
-    if (!deployedSecrets.includes(secret.name)) {
-      await client.getSecret(secret.id).remove();
-    }
-  }
-}
-
 /**
- * Remove all release objects from Docker by pack name and stack
+ * Generate filter function for Docker Objects based on release labels
  */
-async function removeRelease({ stack, pack }) {
-  const client = docker.getDockerodeClient();
-  if (!stack || !pack) {
-    throw new Error('Removing a release requires valid stack & pack as a minimum');
-  }
-  const releaseObjects = await findReleaseObjects({ stack, pack });
-  for (service of releaseObjects.services) {
-    await client.getService(service.id).remove();
-  }
-  for (secret of releaseObjects.secrets) {
-    await client.getSecret(secret.id).remove();
-  }
+function releaseLabelFilter({ pack, stack, version, digest }) {
+  return o => {
+    if (pack && o.Spec.Labels['io.github.swarm-pack.pack.name'] !== pack) return false;
+    if (version && o.Spec.Labels['io.github.swarm-pack.pack.version'] !== version)
+      return false;
+    if (digest && o.Spec.Labels['io.github.swarm-pack.release.digest'] !== digest)
+      return false;
+    if (stack && o.Spec.Labels['com.docker.stack.namespace'] !== stack) return false;
+    return true;
+  };
 }
 
 /**
@@ -64,19 +37,48 @@ async function findReleaseObjects({ pack, stack, version, digest }) {
 }
 
 /**
- * Generate filter function for Docker Objects based on release labels
+ * Deploy a Release object (secrets & services) to Docker swarm
  */
-function releaseLabelFilter({ pack, stack, version, digest }) {
-  return function(o) {
-    console.log(`filter check for ${o.Spec.Name}`);
-    if (pack && o.Spec.Labels['io.github.swarm-pack.pack.name'] !== pack) return false;
-    if (version && o.Spec.Labels['io.github.swarm-pack.pack.version'] !== version)
-      return false;
-    if (digest && o.Spec.Labels['io.github.swarm-pack.release.digest'] !== digest)
-      return false;
-    if (stack && o.Spec.Labels['com.docker.stack.namespace'] !== stack) return false;
-    return true;
-  };
+async function deployRelease({ release }) {
+  const client = docker.getDockerodeClient();
+  const { stack, pack } = release;
+  await release.compile();
+
+  for (const secret of release.secrets) {
+    await deploySecret({ secret, pack: pack.metadata.name, stack });
+  }
+  await deployToStack(release);
+
+  // Pause to avoid Docker weirdness when immediately accessing deployed objects
+  await wait(2000);
+
+  // Remove any Docker Secrets from old versions of this release
+  // TODO - this used to remove services too but I removed it - can consider adding back if needed
+  const releaseObjects = await findReleaseObjects({ stack, pack: pack.metadata.name });
+  const deployedSecrets = release.secrets.map(s => s.deployName);
+
+  for (const secret of releaseObjects.secrets) {
+    if (!deployedSecrets.includes(secret.name)) {
+      await client.getSecret(secret.id).remove();
+    }
+  }
+}
+
+/**
+ * Remove all release objects from Docker by pack name and stack
+ */
+async function removeRelease({ stack, pack }) {
+  const client = docker.getDockerodeClient();
+  if (!stack || !pack) {
+    throw new Error('Removing a release requires valid stack & pack as a minimum');
+  }
+  const releaseObjects = await findReleaseObjects({ stack, pack });
+  for (const service of releaseObjects.services) {
+    await client.getService(service.id).remove();
+  }
+  for (const secret of releaseObjects.secrets) {
+    await client.getSecret(secret.id).remove();
+  }
 }
 
 // async function remove({ name, stack }) {

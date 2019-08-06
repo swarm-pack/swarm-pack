@@ -97,7 +97,8 @@ function init({ program, moduleConfig }) {
     configureDocker({ ...program });
 
     // If flag set on CLI, that takes priority, otherwise if it's already in config use that, finally default false
-    config.includePrerelease = program.includePrerelease || config.includePrerelease || false;
+    config.includePrerelease =
+      program.includePrerelease || config.includePrerelease || false;
 
     // Persist config
     persist();
@@ -110,30 +111,23 @@ function init({ program, moduleConfig }) {
   initialized = true;
 }
 
-function get() {
-  if (!initialized) {
-    throw new Error('Config must be initialized first!');
-  }
-  if (!config.persist) {
-    config.persist = persist;
-  }
-  return config;
-}
-
 /**
  * module proxies get properties to config object (except for init & persist functions)
  * allows us to throw an exception when getting config properties if init() not called yet
  */
-module.exports = new Proxy({ init, persist }, {
-  get: (target, prop) => {
-    if (typeof target[prop] === 'function') {
-      return target[prop]
-    }
-    else if (!initialized) {
-      throw new Error('Config not yet initialized!');
-    } else {
-      return config[prop];
-    }
-  },
-  set: (target, prop, value) => Reflect.set(config, prop, value)
-});
+module.exports = new Proxy(
+  { init, persist },
+  {
+    get: (target, prop) => {
+      if (typeof target[prop] === 'function') {
+        return target[prop];
+      }
+      if (!initialized) {
+        throw new Error('Config not yet initialized!');
+      } else {
+        return config[prop];
+      }
+    },
+    set: (target, prop, value) => Reflect.set(config, prop, value)
+  }
+);

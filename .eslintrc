@@ -5,6 +5,8 @@
     "prettier/prettier": ["error"],
     "no-console": "off",
     "camelcase": "off",
-    'no-plusplus': "off"
+    'no-plusplus': "off",
+    "no-await-in-loop": "off",
+    "no-restricted-syntax": ["error", "LabeledStatement", "WithStatement"]
   }
 }

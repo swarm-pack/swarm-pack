@@ -12,17 +12,17 @@ function deployToStack({ compose, stack }) {
     ['stack', 'deploy', '--with-registry-auth', '--compose-file', '-', stack],
     s
   )
-    .then(function(stdOutLines) {
+    .then(stdOutLines => {
       const changedServices = [];
 
       for (const l of stdOutLines) {
-        const updateMatch = /^Updating service (?<name>[a-zA-Z0-9_\-]*) \(id: (?<id>[a-zA-Z0-9]*)\)$/.exec(
+        const updateMatch = /^Updating service (?<name>[a-zA-Z0-9_-]*) \(id: (?<id>[a-zA-Z0-9]*)\)$/.exec(
           l
         );
         if (updateMatch && updateMatch.groups.name && updateMatch.groups.id) {
           changedServices.push({ type: 'updated', ...updateMatch.groups });
         }
-        const createMatch = /^Creating service (?<name>[a-zA-Z0-9_\-]*)$/.exec(l);
+        const createMatch = /^Creating service (?<name>[a-zA-Z0-9_-]*)$/.exec(l);
         if (createMatch && createMatch.groups.name && createMatch.groups.id) {
           changedServices.push({ type: 'created', ...createMatch.groups });
         }
@@ -41,6 +41,7 @@ async function queryInstalledPack() {
     .filter(s => s.Spec.Labels['io.github.swarm-pack.pack.name'])
     .map(s => ({
       name: s.Spec.Labels['io.github.swarm-pack.pack.name'],
+      stack: s.Spec.Labels['com.docker.stack.namespace'],
       version: s.Spec.Labels['io.github.swarm-pack.pack.version']
     }));
 }

@@ -1,14 +1,30 @@
 const path = require('path');
 const fs = require('fs-extra');
 const yaml = require('js-yaml');
-const { satisfies, compare, valid } = require('semver');
+const { satisfies, gt, compare, valid } = require('semver');
 const got = require('got');
 const walk = require('klaw');
 const _ = require('lodash');
+const tmp = require('tmp');
 const config = require('../config');
 const { revHashFileSync, revHashStr } = require('../utils');
 
 const svOpts = { includePrerelease: config.includePrerelease };
+
+/**
+ * If config.cacheDir, path to repo is function of name & hashed url, appended to config.cacheDir
+ * Otherwise, it will be a tempdir
+ */
+function cacheResolver({ name, url }) {
+  let localPath;
+  if (config.cacheDir) {
+    localPath = path.join(config.cacheDir, `${name}_${revHashStr(url)}`);
+    fs.ensureDirSync(localPath);
+  } else {
+    localPath = tmp.dirSync().name;
+  }
+  return localPath;
+}
 
 class Repo {
   constructor({ name, url }) {
@@ -18,9 +34,8 @@ class Repo {
 
   async getEntries() {
     try {
-      return yaml.safeLoad(
-        await fs.readFile(path.join(cacheResolver(this), 'index.yml'))
-      ).entries;
+      return yaml.safeLoad(await fs.readFile(path.join(cacheResolver(this), 'index.yml')))
+        .entries;
     } catch (e) {
       console.log(e);
       throw new Error(
@@ -35,14 +50,14 @@ class Repo {
     const entries = await this.getEntries();
     const entry = entries
       .filter(e => e.name === pack && satisfies(e.version, version, svOpts))
-      .reduce(
-        (curr, e) => (curr ? (compare(e.version, curr.version, svOpts) > 0 ? e : curr) : e),
-        false
-      );
+      .reduce((curr, e) => {
+        if (!curr) return e;
+        return gt(e.version, curr.version, svOpts) ? e : curr;
+      });
 
     if (entry) {
       const filename = `${entry.name}-${entry.version}.tgz`;
-      entry.cachePath = path.join( cacheResolver(this), filename);
+      entry.cachePath = path.join(cacheResolver(this), filename);
     }
 
     return entry;
@@ -69,21 +84,6 @@ async function loadIndexFile(location) {
  */
 async function repoExists(name) {
   return config.repositories.map(r => r.name).includes(name);
-}
-
-/**
- * If config.cacheDir, path to repo is function of name & hashed url, appended to config.cacheDir
- * Otherwise, it will be a tempdir
- */
-function cacheResolver({ name, url }) {
-  let localPath;
-  if (config.cacheDir) {
-    localPath = path.join(config.cacheDir, `${name}_${revHashStr(url)}`);
-    fs.ensureDirSync(localPath);
-  } else {
-    localPath = tmp.dirSync().name;
-  }
-  return localPath;
 }
 
 /**
@@ -120,7 +120,8 @@ async function generateIndex({ baseUrl }) {
           entries.push(entry);
         }
       })
-      .on('end', () => resolve({ entries }));
+      .on('end', () => resolve({ entries }))
+      .on('error', err => reject(err));
   });
 }
 
@@ -133,8 +134,7 @@ async function generateIndex({ baseUrl }) {
  * Returns path to pack file in cache
  */
 async function getRepoPack({ repoName, pack, version }) {
-  const repo = new Repo(config.repositories.find(repo => repo.name === repoName)); // .reduce(repo => repo.url);
-  const targetSemver = version || '>0.0.0';
+  const repo = new Repo(config.repositories.find(r => r.name === repoName)); // .reduce(repo => repo.url);
   const packEntry = await repo.getPackEntry({ pack, version });
 
   if (!packEntry) {
@@ -163,31 +163,6 @@ async function getRepoPack({ repoName, pack, version }) {
   return packEntry.cachePath;
 }
 
-async function addRepo({ name, url }) {
-  if (!name || !url) {
-    throw new Error('Repository name or url are either missing or invalid');
-  }
-
-  if (config.repositories.find(r => r.name === name || r.url === url)) {
-    throw new Error('Repository name or url already existed in config');
-  }
-
-  await updateRepo({ name, url });
-  config.repositories.push({ name, url });
-  config.persist();
-}
-
-/**
- * Iterate over configured repos and update the index.yml
- */
-async function updateAllRepos() {
-  if (config.cacheDir && !_.isEmpty(config.repositories)) {
-    for (const repo of config.repositories) {
-      await updateRepo(repo);
-    }
-  }
-}
-
 /**
  * If config.cacheDir is set, clone the repo to the cache directory
  * Otherwise we'll clone it to a temporary directory
@@ -205,6 +180,37 @@ async function updateRepo({ name, url }) {
   return localPath;
 }
 
+/**
+ * Iterate over configured repos and update the index.yml
+ */
+async function updateAllRepos() {
+  if (config.cacheDir && !_.isEmpty(config.repositories)) {
+    for (const repo of config.repositories) {
+      await updateRepo(repo);
+    }
+  }
+}
+
+/**
+ * Add a repo to config and persist it to disk
+ */
+async function addRepo({ name, url }) {
+  if (!name || !url) {
+    throw new Error('Repository name or url are either missing or invalid');
+  }
+
+  if (config.repositories.find(r => r.name === name || r.url === url)) {
+    throw new Error('Repository name or url already existed in config');
+  }
+
+  await updateRepo({ name, url });
+  config.repositories.push({ name, url });
+  config.persist();
+}
+
+/**
+ * Remove a repo from config and persist to disk
+ */
 async function removeRepo(ref) {
   const { name, url } = config.repositories.find(r => r.name === ref || r.url === ref);
   if (!name || !url) return;
@@ -233,7 +239,9 @@ async function indexRepo({ baseUrl = '', mergeWith = false }) {
       });
     }
 
-    index.entries.sort((a, b) => a.name - b.name || compare(a.version, b.version, svOpts));
+    index.entries.sort(
+      (a, b) => a.name - b.name || compare(a.version, b.version, svOpts)
+    );
 
     if (index.entries.length > 0) {
       fs.writeFileSync(path.join(process.cwd(), 'index.yml'), yaml.safeDump(index));
@@ -243,14 +251,19 @@ async function indexRepo({ baseUrl = '', mergeWith = false }) {
 
 async function searchCache(keyword) {
   return config.repositories.reduce((found, repo) => {
-    const repoIndexPath = path.join(cacheResolver( repo ), 'index.yml');
+    const repoIndexPath = path.join(cacheResolver(repo), 'index.yml');
     if (fs.pathExistsSync(repoIndexPath)) {
       const repoEntries = yaml.safeLoad(fs.readFileSync(repoIndexPath)).entries;
-      return found.concat(repoEntries.filter(e => {
-        return e.name.includes(keyword)
-      }).map(e => ({repo: repo.name, ...e})))
+      found.concat(
+        repoEntries
+          .filter(e => {
+            return e.name.includes(keyword);
+          })
+          .map(e => ({ repo: repo.name, ...e }))
+      );
     }
-  }, [])
+    return found;
+  }, []);
 }
 
 module.exports = {

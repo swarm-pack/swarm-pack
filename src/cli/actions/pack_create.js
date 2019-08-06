@@ -7,10 +7,6 @@ const packFileName = 'packfile.yml';
 const defaultsFileName = 'defaults.yml';
 const composeFileName = 'docker-compose.tpl.yml';
 
-async function pack_create() {
-  inquirer.prompt(questions).then( answers => generatePack(answers) );
-}
-
 const questions = [
   {
     type: 'input',
@@ -226,6 +222,10 @@ function generatePack(answers) {
     We've included some example configurations for you to configure or remove as needed.
     Good luck developing your new pack.
   `);
+}
+
+async function pack_create() {
+  inquirer.prompt(questions).then(answers => generatePack(answers));
 }
 
 module.exports = {

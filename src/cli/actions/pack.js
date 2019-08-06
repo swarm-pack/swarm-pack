@@ -6,10 +6,9 @@ const lodash = require('lodash');
 
 const { loadPack, compileAndDeploy } = require('../../index');
 
-
-//const { generatePack } = require('../pack/create');
+// const { generatePack } = require('../pack/create');
 const { bundle } = require('../../lib/pack');
-//const questions = require('./questions');
+// const questions = require('./questions');
 
 function noEmptyValues(obj) {
   lodash.forOwn(obj, (value, key) => {
@@ -50,5 +49,7 @@ async function pack_bundle(packDir, cmd) {
 }
 
 module.exports = {
-  pack_bundle, pack_deploy, pack_inspect
-}
+  pack_bundle,
+  pack_deploy,
+  pack_inspect
+};

@@ -1,29 +1,19 @@
 class SwarmPackError extends Error {
-  constructor(args){
+  constructor(args) {
     super(args);
     this.name = this.constructor.name;
     Error.captureStackTrace(this, this.constructor);
   }
 }
 
-class DockerError extends SwarmPackError {
-  constructor(args){
-    super(args);
-  }
-}
+class DockerError extends SwarmPackError {}
 
-class PackError extends SwarmPackError {
-  constructor(args){
-    super(args);
-  }
-}
+class PackError extends SwarmPackError {}
 
-class RepoError extends SwarmPackError {
-  constructor(args){
-    super(args);
-  }
-}
+class RepoError extends SwarmPackError {}
 
 module.exports = {
-  DockerError, PackError, RepoError
-}
+  DockerError,
+  PackError,
+  RepoError
+};
