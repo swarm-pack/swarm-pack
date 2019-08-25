@@ -1,16 +1,11 @@
-const { Readable } = require('stream');
 const docker = require('../../utils/docker');
 const spawn = require('../../utils/spawn-promise');
 
 function deployToStack({ compose, stack }) {
-  const s = new Readable();
-  s.push(compose);
-  s.push(null);
-
   return spawn(
     'docker',
     ['stack', 'deploy', '--with-registry-auth', '--compose-file', '-', stack],
-    s
+    compose
   )
     .then(stdOutLines => {
       const changedServices = [];

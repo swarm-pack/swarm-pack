@@ -1,14 +1,12 @@
 /**
- * Based on https://github.com/medikoo/stream-promise
+ * Based on https://github.com/panosoft/spawn-promise/blob/master/lib/index.js
  * With the following changes:
- *  - Accept a Stream as input as alternative to string. Stream will be piped to child process
  *  - Promise resolves with array of strings representing lines of stdout, instead of concatanted buffer
- *  - Passes parent ENV to child process
+ *  - Passes parent ENV to child process by default
  */
 
 const co = require('co');
 const childProcess = require('child_process');
-const stream = require('stream');
 
 const exitCodes = {
   1: 'Uncaught Fatal Exception',
@@ -44,11 +42,19 @@ const spawn = co.wrap(function*(command, args, input) {
   // Capture errors
   const errors = {};
   const stderrOutput = {};
-  child.on('error', error => (errors.spawn = error));
-  child.stdin.on('error', error => (errors.stdin = error));
-  child.stdout.on('error', error => (errors.stdout = error));
+  child.on('error', error => {
+    errors.spawn = error;
+  });
+  child.stdin.on('error', error => {
+    errors.stdin = error;
+  });
+  child.stdout.on('error', error => {
+    errors.stdout = error;
+  });
   child.stderr.setEncoding('utf8');
-  child.stderr.on('error', error => (errors.stderr = error));
+  child.stderr.on('error', error => {
+    errors.stderr = error;
+  });
   child.stderr.on('data', data => {
     if (!stderrOutput.process) stderrOutput.process = '';
     stderrOutput.process += data;
@@ -60,12 +66,8 @@ const spawn = co.wrap(function*(command, args, input) {
 
   // Run
   const exitCode = yield new Promise(resolve => {
-    child.on('close', (code, signal) => resolve(code));
-    if (input instanceof stream.Stream) {
-      input.pipe(child.stdin);
-    } else {
-      child.stdin.end(input);
-    }
+    child.on('close', code => resolve(code));
+    child.stdin.end(input);
   });
   if (exitCode !== 0) {
     errors.exit = `Command failed: ${exitCode}: ${exitCodes[exitCode]}`;
