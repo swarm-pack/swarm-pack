@@ -226,27 +226,30 @@ async function removeRepo(ref) {
   config.persist();
 }
 
-async function indexRepo({ baseUrl = '', mergeWith = false }) {
-  generateIndex({ baseUrl }).then(index => {
-    if (mergeWith) {
-      const mergeIndex = loadIndexFile(mergeWith);
-      mergeIndex.entries.forEach(mergeEntry => {
-        const dupe = index.entries.find(entry => {
-          return entry.name === mergeEntry.name && entry.version === mergeEntry.version;
-        });
-        // Add mergeEntry if not dupe of local entry
-        if (!dupe) index.entries.push(mergeEntry);
-      });
-    }
+async function indexRepo({ baseUrl = '', mergeWith = false, outputPath = '.' }) {
+  const { entries } = mergeWith ? await loadIndexFile(mergeWith) : { entries: [] };
+  const { entries: generatedEntries } = await generateIndex({ baseUrl });
 
-    index.entries.sort(
-      (a, b) => a.name - b.name || compare(a.version, b.version, svOpts)
-    );
-
-    if (index.entries.length > 0) {
-      fs.writeFileSync(path.join(process.cwd(), 'index.yml'), yaml.safeDump(index));
+  for (const entry of generatedEntries) {
+    // If entries does not include this entry already, add it
+    if (
+      !entries.some(e => {
+        return entry.name === e.name && entry.version === e.version;
+      })
+    ) {
+      entries.push(entry);
     }
+  }
+
+  entries.sort((a, b) => {
+    if (a.name > b.name) return 1;
+    if (a.name > b.name) return -1;
+    return compare(a.version, b.version, svOpts);
   });
+
+  if (entries.length > 0) {
+    fs.writeFileSync(path.resolve(outputPath, 'index.yml'), yaml.safeDump({ entries }));
+  }
 }
 
 async function searchCache(keyword) {

@@ -16,8 +16,8 @@ async function repo_update(/* cmd */) {
   console.log('Cache successfully updated');
 }
 
-async function repo_index(cmd) {
-  indexRepo({ baseUrl: cmd.url, merge: cmd.merge });
+async function repo_index({ url, merge, outputPath }) {
+  await indexRepo({ baseUrl: url, mergeWith: merge, outputPath });
   console.log('Created index.yml');
 }
 

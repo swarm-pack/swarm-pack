@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 const { Command } = require('commander');
+const yaml = require('js-yaml');
 const config = require('../config');
-const package = require('../../package.json');
+const { version } = require('../../package.json');
+const { setObjectProperty } = require('../utils');
 
 const program = new Command();
 
@@ -16,11 +18,14 @@ function setValues(str, values) {
 
 // Global options
 program
-  .version(package.version)
+  .version(version)
   .option('-H, --host <host>', 'remote docker host')
   .option('--port <port>', 'remote docker port')
   .option('--socketPath <socketPath>', 'path to docker daemon socket on filesystem')
-  .option('--include-prerelease', 'Include pre-release versions when looking for matching packs')
+  .option(
+    '--include-prerelease',
+    'Include pre-release versions when looking for matching packs'
+  );
 
 // Initial parse to get global options into config
 program.parse(process.argv);
@@ -29,7 +34,14 @@ config.init({ program });
 const { pack_bundle, pack_deploy, pack_inspect } = require('./actions/pack');
 const { pack_create } = require('./actions/pack_create');
 const { release_ls, release_remove } = require('./actions/release');
-const { repo_list, repo_add, repo_remove, repo_search, repo_index, repo_update } = require('./actions/repo');
+const {
+  repo_list,
+  repo_add,
+  repo_remove,
+  repo_search,
+  repo_index,
+  repo_update
+} = require('./actions/repo');
 
 // PACK COMMANDS
 program
@@ -71,32 +83,35 @@ program
 program
   .command('repo:ls')
   .description('List repository')
-  .action(repo_list)
+  .action(repo_list);
 program
   .command('repo:add <name> <url>')
   .description('Add repository')
-  .action(repo_add)
+  .action(repo_add);
 program
   .command('repo:rm <nameOrUrl>')
   .alias('repo:remove')
   .description('Remove repository')
-  .action(repo_remove)
+  .action(repo_remove);
 program
   .command('repo:search <keyword>')
   .description('Search the repository for pack by name')
-  .action(repo_search)
+  .action(repo_search);
 program
   .command('repo:index')
   .description('build index file for repo in current directory')
   .option('--merge <str>', 'Merge this index with existing index file (path or url)')
   .option('--url <str>', 'Base URL where packs are hosted')
-  .action(repo_index)
+  .option(
+    '--output-path <str>',
+    'Directory into which to save the index.yml. Default curr working dir.',
+    '.'
+  )
+  .action(repo_index);
 program
   .command('repo:update')
   .alias('update')
-  .description(
-    `Update information of available packs locally from pack repositories`
-  )
+  .description(`Update information of available packs locally from pack repositories`)
   .action(repo_update);
 
 // RELEASE ACTIONS
