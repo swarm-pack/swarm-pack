@@ -19,7 +19,7 @@ async function buildTargets() {
     const targetRef = `${target}-${nodeVersion}`;
     
     await compile({
-      input: './src/cli/pack.js',
+      input: './src/cli/index.js',
       output: path.join(bundleDir, `swarm-pack`),
       target: targetRef
     })
