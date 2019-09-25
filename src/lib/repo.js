@@ -226,6 +226,9 @@ async function removeRepo(ref) {
   config.persist();
 }
 
+/**
+ * Generate index.yml in current directory containing pack bundle files
+ */
 async function indexRepo({ baseUrl = '', mergeWith = false, outputPath = '.' }) {
   const { entries } = mergeWith ? await loadIndexFile(mergeWith) : { entries: [] };
   const { entries: generatedEntries } = await generateIndex({ baseUrl });
@@ -243,7 +246,7 @@ async function indexRepo({ baseUrl = '', mergeWith = false, outputPath = '.' }) 
 
   entries.sort((a, b) => {
     if (a.name > b.name) return 1;
-    if (a.name > b.name) return -1;
+    if (a.name < b.name) return -1;
     return compare(a.version, b.version, svOpts);
   });
 
