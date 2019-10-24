@@ -35,7 +35,7 @@ async function pack_deploy(packRef, stack, cmd) {
   if (Object.keys(cmd.set).length) {
     values = deepExtend(values, cmd.set);
   }
-  await compileAndDeploy({ packRef, stack, values });
+  await compileAndDeploy({ packRef, stack, values, version: cmd.version });
   console.log(`Deployed pack ${packRef} to stack ${stack}`);
 }
 

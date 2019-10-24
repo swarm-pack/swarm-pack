@@ -8,8 +8,8 @@ async function mergeValuesWithPackDefaults({ packRef, values = {} }) {
   return deepExtend({}, pack.defaults, values);
 }
 
-async function compileAndDeploy({ stack, packRef, values = {} }) {
-  const pack = await loadPack({ packRef });
+async function compileAndDeploy({ stack, packRef, version, values = {} }) {
+  const pack = await loadPack({ packRef, version });
   const release = new Release({ pack, stack, values });
   await deployRelease({ release });
 }

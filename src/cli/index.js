@@ -64,6 +64,7 @@ program
     stack - a Docker Stack namespace`
   )
   .option('-f, --values-file <str>', 'use a values file')
+  .options('--version <str>', 'Specify a semver (defaults to latest')
   .option(
     '--set <str>',
     'set a value e.g. myvalue=foo (can be used multiple times)',
