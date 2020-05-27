@@ -97,9 +97,10 @@ function compile({ template, values, manifests, stack, packDir }) {
       `com.docker.stack.namespace=${stack}`
     ];
 
+    const configLabels = config.deploy && config.deploy.labels || [];
     parsed.services[service] = _.merge(config, {
       deploy: {
-        labels: _.concat(config.deploy.labels, labelsStr)
+        labels: _.concat(configLabels, labelsStr)
       },
       labels
     });
