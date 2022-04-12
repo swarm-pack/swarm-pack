@@ -24,7 +24,7 @@
     "pkg": "^4.3.7",
     "sanitize-filename": "^1.6.1",
     "shelljs": "^0.8.3",
-    "simple-git": "^1.107.0",
+    "simple-git": "^3.5.0",
     "stream-to-string": "^1.2.0",
     "tmp": "^0.0.33"
   },
