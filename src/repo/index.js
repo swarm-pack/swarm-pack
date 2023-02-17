@@ -1,6 +1,5 @@
 const path = require('path');
 const simpleGit = require('simple-git/promise');
-const tmp = require('tmp');
 const fs = require('fs-extra');
 const yaml = require('js-yaml');
 const md5 = require('md5');
@@ -13,7 +12,7 @@ async function cacheResolver({ name, url }) {
     localPath = path.join(config.cacheDir, `${name}_${md5(url)}`);
     await fs.ensureDir(localPath);
   } else {
-    localPath = tmp.dirSync().name;
+    throw new Error("Cache dir doesn't exists");
   }
 
   return localPath;

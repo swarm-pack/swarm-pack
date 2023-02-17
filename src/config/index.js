@@ -14,6 +14,9 @@ const defaultConfigDirName = '.swarm-pack';
 const defaultConfigFileName = 'config.yml';
 const defaultCacheDirName = 'cache';
 
+config.defaultLoc = path.join(os.homedir(), defaultConfigDirName);
+config.cacheDir = path.join(config.defaultLoc, defaultCacheDirName);
+
 // Individual config helper for Docker config
 function configureDocker({ socketPath = false, host = false, port = '2375' }) {
   if (socketPath && host) {
@@ -34,11 +37,9 @@ function configureDocker({ socketPath = false, host = false, port = '2375' }) {
 }
 
 function setConfigEnv() {
-  config.defaultLoc = path.join(os.homedir(), defaultConfigDirName);
   config.configLoc =
     getEnv('SWARM_PACK_CONFIG_FILE', '') ||
     path.join(config.defaultLoc, defaultConfigFileName);
-  config.cacheDir = path.join(config.defaultLoc, defaultCacheDirName);
 }
 
 function persist() {
